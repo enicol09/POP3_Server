@@ -38,5 +38,7 @@ doxy:
 # To clean .o files: "make clean"
 clean:
 	rm -rf *.o doxygen.log html
-doomsday:
-	rm -rf plingeling sat input.cnf *.o puzzle.pzl
+
+stable:
+	rm -rf *.o doxygen.log html bas
+
