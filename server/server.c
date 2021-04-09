@@ -18,8 +18,8 @@ char *command[] = {
     "RETR",
     "DELE",
     "QUIT"
-}
-bool *argument[]={
+};
+bool argument[]={
     true,
     true,
     false,
@@ -27,7 +27,7 @@ bool *argument[]={
     true,
     true,
     false
-}
+};
 void toUpper(char *input){
    int i;
    for (i = 0; input[i]!='\0'; i++) {
@@ -102,7 +102,7 @@ main(int argc, char *argv[]) /* Server with Internet stream sockets */
         }
 
       printf("Accepted connection from %s\n", rem -> h_name);
-      display(newsock);
+      //display(newsock);
       bool nextLoop = true;
                 do {
                    bzero(input, sizeof input); /* Initialize buffer */
@@ -148,7 +148,7 @@ main(int argc, char *argv[]) /* Server with Internet stream sockets */
          exit(0);
         }
     }
-}
+
 int getLength(){
     return sizeof(command)/sizeof(char*);
 }
