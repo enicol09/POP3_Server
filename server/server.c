@@ -115,25 +115,25 @@ main(int argc, char *argv[]) /* Server with Internet stream sockets */
                    int code = decodeInput(input);
                    switch(code){
                        case 0:
-                            printf("USER\n");
+                            write(newsock,"USER\r\n",6);
                             break;
                         case 1:
-                            printf("PASS\n");
+                            write(newsock,"PASS\r\n",6);
                             break;                       
                         case 2:
-                            printf("STATS\n");
+                            write(newsock,"STATS\r\n",6);
                             break;                       
                         case 3:
-                            printf("LIST\n");
+                            write(newsock,"LIST\r\n",6);
                             break;                       
                         case 4:
-                            printf("RETR\n");
+                            write(newsock,"RETR\r\n",6);
                             break;                       
                         case 5:
-                            printf("DELE\n");
+                            write(newsock,"DELE\r\n",6);
                             break;                       
                         case 6:
-                            printf("QUIT\n");
+                            write(newsock,"QUIT\r\n",6);
                             break;
                         default:
                             write(newsock,"-ERR\r\n",6);
