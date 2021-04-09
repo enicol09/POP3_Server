@@ -152,36 +152,50 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
 
                    int code = decodeInput(input);
                        if(code == 0){
-                            //write(newsock,"USER\r\n",6);
+                       
+
+                           if(userIn)
+                               write(newsock,"You have already connected \r\n",30);
+                            else {
                             int size = strlen(input) - 4;
                             char user[size];
                             int position = 5;
                             int c = 0;
                             int length = size;
                             while ( c < length) {
+                               if(input[position] != '\n' && input[position] != '\r'){
                                user[c] = input[position];
                                c++;
                                position++;
+                               }
+                               else {
+                               break;}
                             }
                             user[c] = '\0';
+                            
+           
+                            username = malloc(sizeof(char)*c);
+                            strcpy(username,user);
                             if(userExists(user) == false){
                                 char stupidError[256];
-                                strcat(stupidError,"-ERR this is stupid, i have never in my life heard of mailbox ");
+                                strcat(stupidError,"-ERR this is stupid, i have never in my life heard of mailbox |");
                                 strcat(stupidError,user);
-                                strcat(stupidError,"\r\n");
+                                strcat(stupidError,"|\r\n\0");
                                 write(newsock,stupidError,strlen(stupidError));
                                 nextLoop = false;
                                 close(newsock);
                             }
                             else{
-                              char stupidMsg[256];
+                              char stupidMsg[120];
                               strcat(stupidMsg,"+OK ");
                               strcat(stupidMsg,user);
-                              strcat(stupidMsg,"is a valid mailbox, bravo dude :)\r\n");
-                              write(newsock,stupidMsg,strlen(stupidMsg));
+                              strcat(stupidMsg," is a valid mailbox, bravo dude :)\r\n\0"); 
+                              
+                             write(newsock,stupidMsg,strlen(stupidMsg));
                             }
+                            
+                            
                             userIn = true;
-                             //username = "mbofos01";
                             many = howMany(user);
                             emails = malloc(sizeof(bool)*many);
                             printf("Mails: %d\r\n",many);
@@ -190,23 +204,62 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                                 emails[i] = true;
                             names = malloc(sizeof(int)*many);
                             fillNames(user,names);
+                            }
                         }else if(code ==1 ){
-                            write(newsock,"PASS\r\n",6);
+                            
+                            if(userIn){
+                         
+                            int size = strlen(input) - 4;
+                            char passw[size];
+                            int position = 5;
+                            int c = 0;
+                            int length = size;
+                            while ( c < length) {
+                               if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                               passw[c] = input[position];
+                               c++;
+                               position++;
+                               }
+                               else {
+                               break;}
+                            }
+                            passw[c] = '\0';
+                            
+                            if(c==0){
+                             write(newsock,"-ERR invalid password - you need to enter a password first \r\n",strlen("-ERR invalid password - you need to enter a password first \r\n"));
+                         } else {
+                            //write(newsock,"PASS\r\n",6);
                             char *password = NULL;
                             if(userIn && !transaction) {
-                                if(passwordCheck(username,password)){
+                                if(passwordCheck(username,passw)){
                                     transaction = true;
+                                    write(newsock,"+OK maildrop locked and ready\r\n",strlen("+OK maildrop locked and ready\r\n"));
                                 }
                                   else{
+                                    write(newsock,"-ERR invalid password\r\n",strlen("-ERR invalid password\r\n"));
                                     nextLoop = false;
 
                                 }
                             }
+                          }
+                          }
+                          else{
+                          write(newsock,"-ERR You have to insert the username first - please insert USER command :( \r\n",strlen("-ERR You have to insert the username first - please insert USER command :( \r\n")); }
                         } else if (code == 2){
-                            write(newsock,"STATS\r\n",6);
+                           
                             if(transaction){
                                 activeStats(username,emails,&plithos,&megethos);
-                                //printf("How many: %d and size %d\n",plithos,megethos);
+                                char stat[256];
+                                char lol[1000];
+                                strcat(stat,"+OK ");
+                                itoa(plithos,lol);
+                                strcat(stat,lol);
+                                strcat(stat," ");
+                                char lol2[1000];
+                                itoa(megethos,lol2);
+                                strcat(stat,lol2);
+                                strcat(stat,"\r\n");
+                                write(newsock,stat,strlen(stat)); 
                             }
                         }
                         else if (code ==3){
@@ -224,14 +277,40 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                             }
                         }
                         else if (code == 5 ) {
-                            write(newsock,"DELE\r\n",6);
+                            int size = strlen(input) - 4;
+                            char toDel[size];
+                            int position = 5;
+                            int c = 0;
+                            int length = size;
+                            while ( c < length) {
+                               if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                               toDel[c] = input[position];
+                               c++;
+                               position++;
+                               }
+                               else {
+                               break;}
+                            }
+                            toDel[c] = '\0';
+                            
+                            mail = atoi(toDel);
                             if(transaction){
-                                deleteMail(mail,emails,many,names);
+                                if(deleteMail(mail,emails,many,names)){
+                                   char print[100];
+                                   strcat(print,"+OK message ");
+                                   strcat(print, toDel);
+                                   strcat(print, " deleted\0\r\n");
+                                   write(newsock, print ,strlen(print)); 
+                                }
+                                else {
+                                   write(newsock,"-ERR no such message :(\r\n" ,strlen("-ERR no such message :(\r\n" )); 
+                                }
+                                
                             }
                               }
 
                         else if (code == 6 ) {
-                            write(newsock,"QUIT\r\n",6);
+                            write(newsock,"+OK\r\n",5);
                             if(transaction){
                                 update(username,emails,names,many);
                                 nextLoop = false;

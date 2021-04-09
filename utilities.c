@@ -153,10 +153,14 @@ int findMail(int mail,int *names,int howMany){
  * @param int *names the names of the emails
  * @return void
  * */
-void deleteMail(int mail,bool *emails,int howMany,int *names){
+bool deleteMail(int mail,bool *emails,int howMany,int *names){
     mail = findMail(mail,names,howMany);
     if(mail < howMany && mail >=0)
         emails[mail] = false;
+        else 
+        return false;
+        
+    return true;
 }
 /**
  * @brief This function actually deletes a file from the directory

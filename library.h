@@ -9,7 +9,7 @@
 #include <fcntl.h> 
 
 #define MAX_PATH 100
-
+bool deleteMail(int mail,bool *emails,int howMany,int *names);
 bool userExists(const char *username);
 bool passwordCheck(char *username,char *passtry);
 bool activeStats(const char *username,bool *emails,int *count,int *size );
@@ -22,5 +22,4 @@ bool retrieveMail(int name,char *username);
 int fileSize(const char *username, const char *filename);
 int howMany(const char *username);
 int findMail(int mail,int *names,int howMany);
-void deleteMail(int mail,bool *emails,int howMany,int *names);
 char* itoa(int i, char b[]);
