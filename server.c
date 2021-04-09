@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <ctype.h> 
+#include <ctype.h>
 #include <stdbool.h>
 
 #define RESPONSE_LENGTH 512
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
  struct sockaddr *serverptr, *clientptr;
  struct hostent *rem;
 
- 
+
  if (argc < 2)
     { /* Check if server's port number is given */
      printf("Please give the port number\n");
@@ -113,9 +113,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
     }
 
  printf("Listening for connections to port %d\n", port);
- 
- while(1)
-    {
+
      clientptr = (struct sockaddr *) &client;
      clientlen = sizeof client;
      if ((newsock = accept(sock, clientptr, &clientlen)) < 0)
@@ -151,14 +149,13 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                        perror("read");
                        exit(1);
                       }
-                   printf("Read string: %s\n", input);
+
                    int code = decodeInput(input);
-                   printf("eheihreirhere0\r\n");
                        if(code == 0){
-                            write(newsock,"USER\r\n",6);
+                            //write(newsock,"USER\r\n",6);
                             int size = strlen(input) - 4;
                             char user[size];
-                            int position = 5;`
+                            int position = 5;
                             int c = 0;
                             int length = size;
                             while ( c < length) {
@@ -168,8 +165,20 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                             }
                             user[c] = '\0';
                             if(userExists(user) == false){
-                                chat *stupiderror ="-ERR this is stupid, i have never in my life heard of mailbox";
-                                write(newsock,"-ERR this is stupid, i have never in my life heard of mailbox")
+                                char stupidError[256];
+                                strcat(stupidError,"-ERR this is stupid, i have never in my life heard of mailbox ");
+                                strcat(stupidError,user);
+                                strcat(stupidError,"\r\n");
+                                write(newsock,stupidError,strlen(stupidError));
+                                nextLoop = false;
+                                close(newsock);
+                            }
+                            else{
+                              char stupidMsg[256];
+                              strcat(stupidMsg,"+OK ");
+                              strcat(stupidMsg,user);
+                              strcat(stupidMsg,"is a valid mailbox, bravo dude :)\r\n");
+                              write(newsock,stupidMsg,strlen(stupidMsg));
                             }
                             userIn = true;
                              //username = "mbofos01";
@@ -190,8 +199,9 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                                 }
                                   else{
                                     nextLoop = false;
-                                }      
-                            }              
+
+                                }
+                            }
                         } else if (code == 2){
                             write(newsock,"STATS\r\n",6);
                             if(transaction){
@@ -206,20 +216,20 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                                 list(username,mail,emails,names,many);
                                 listEmpty(username,emails,names,many);
                             }
-                        }                       
+                        }
                         else if(code == 4){
                             write(newsock,"RETR\r\n",6);
                             if(transaction){
                                 retrieveMail(mail,username);
                             }
-                        }                      
+                        }
                         else if (code == 5 ) {
                             write(newsock,"DELE\r\n",6);
                             if(transaction){
                                 deleteMail(mail,emails,many,names);
-                            }  
+                            }
                               }
-                                   
+
                         else if (code == 6 ) {
                             write(newsock,"QUIT\r\n",6);
                             if(transaction){
@@ -228,12 +238,10 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                             }
                         }
                         else {
-                            write(newsock,ERROR,4);
-                            write(newsock,"\r\n",2);
+                            write(newsock,"-ERR\r\n",6);
                         }
-                   
-                   bzero(input, sizeof input);
 
+                      bzero(input, sizeof input);
 
                   } while (nextLoop); /* Finish on "end" */
                         free(emails);
@@ -241,8 +249,6 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
          close(newsock); /* Close socket */
          printf("Connection from %s is closed\n", rem -> h_name);
          //exit(0);
-        }
 
         return 0;
     }
-
