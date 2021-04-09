@@ -1,7 +1,7 @@
 #include "library.h"
 /**
  * Driver class to see the use of the mail utilities
- * */
+ * 
 int main(int argc, char* argv[])
 {
     bool transaction = false;
@@ -77,3 +77,4 @@ int main(int argc, char* argv[])
         free(emails);
         free(names);
 }
+*/

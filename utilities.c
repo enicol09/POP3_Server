@@ -71,7 +71,7 @@ int howMany(const char *username){
             }
         }
     }else{
-        printf("The %s it cannot be opened or is not a directory\n", username);
+        //printf("The %s it cannot be opened or is not a directory\n", username);
          return -1;
     }
 
@@ -113,7 +113,7 @@ bool activeStats(const char *username,bool *emails,int *count,int *size ){
             }
         }
     }else{
-        printf("The %s it cannot be opened or is not a directory\n", username);
+        //printf("The %s it cannot be opened or is not a directory\n", username);
          return false;
     }
 
@@ -252,7 +252,7 @@ bool fillNames(const char *username,int *names){
                 while ( ( res = readdir ( folder ) ) ){
                     if ( strcmp( res->d_name, "." ) && strcmp( res->d_name, ".." )&& strcmp( res->d_name, "PASSWORD" )){
                         names[pointer++] = atoi(res->d_name);
-                        printf("File: %d\n",names[pointer-1]);
+                        //printf("File: %d\n",names[pointer-1]);
                     }
                 }
                 closedir (folder);
@@ -262,7 +262,7 @@ bool fillNames(const char *username,int *names){
             }
         }
     }else{
-        printf("The %s it cannot be opened or is not a directory\n", username);
+        //printf("The %s it cannot be opened or is not a directory\n", username);
          return false;
     }
 
@@ -279,7 +279,7 @@ bool fillNames(const char *username,int *names){
  * @return bool if everything its okay true, otherwise false
  * */
 bool listEmpty(const char *username,bool *emails,int *names,int howMany){
-    printf("=========== EMPTY LIST ===========\n");
+   // printf("=========== EMPTY LIST ===========\n");
     int i = 0;
     for(i=0;i<howMany;i++)
         list(username,names[i],emails,names,howMany);
@@ -310,7 +310,7 @@ bool list(const char *username,int mail, bool *emails,int *names,int howMany){
     temp[place] = true;
     int size,null;
     activeStats(username,temp,&null,&size);
-    printf("%d %d\n",names[place],size);
+    //printf("%d %d\n",names[place],size);
     return true;
 }
 /**
@@ -330,22 +330,22 @@ bool retrieveMail(int name,char *username) {
     char filename[10];
 
     itoa(name,filename);
-    printf("%s\n", filename);
+    //printf("%s\n", filename);
     int size = strlen(username)+strlen(filename)+3;
     char s1[size];
     strcpy(s1,username);
     strcat(s1,"/");
     strcat(s1,filename);
     s1[size-1]='\0';
-    printf("%s\n", s1);
+    //printf("%s\n", s1);
     int fd = open(s1, O_RDONLY, 0);
     if(fd < 0)
         return false;
-    printf("%d\n", fd);
+    //printf("%d\n", fd);
     char buf[50000];
     read(fd, buf, 50000-1);
     //buf[50000-1] = '\0';
-    printf("%s\n", buf);
+    //printf("%s\n", buf);
     return true;
 }
 /**
@@ -370,7 +370,7 @@ bool passwordCheck(char *username,char *passtry){
     int fd = open(s1, O_RDONLY, 0);
     if(fd < 0)
         return false;
-    printf("%d\n", fd);
+    //printf("%d\n", fd);
     char buf[100];
     read(fd, buf, 100-1);
     return strcmp(passtry,buf) == 0;
