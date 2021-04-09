@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
     bool transaction = false;
     bool userIn = false;
     bool nextLoop = true;
-    char *inputs[] = {"1","mbofos01","9","11a11","2","6","1","4","8","1","7"};
+    char *inputs[] = {"1","mbofos01","9","1111","3","1","7"};
     char *folder= NULL;
     bool *emails = NULL;
     int *names = NULL;
@@ -62,6 +62,7 @@ int main(int argc, char* argv[])
         }
         else if(transaction && code == 7){
             printf("----quit\n");
+            update(folder,emails,names,many);
             nextLoop = false;
         }
         else if(transaction && code == 8){
