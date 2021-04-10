@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <ctype.h>
 #include <fcntl.h> 
 
 #define MAX_PATH 100
@@ -23,3 +25,6 @@ int fileSize(const char *username, const char *filename);
 int howMany(const char *username);
 int findMail(int mail,int *names,int howMany);
 char* itoa(int i, char b[]);
+bool startsWith(char *str,char *start);
+int getValue(char *str,char *start);
+void readConfig(int *threads,int *port);

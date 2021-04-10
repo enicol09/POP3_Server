@@ -1,0 +1,5 @@
+# Mailserver Configuration File
+# The Number of Threads in the Threadpool
+THREADS=40
+# The Port number of the email server
+PORT=30000 

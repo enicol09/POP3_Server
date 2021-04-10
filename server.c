@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
     bool userIn = false;
     char *username = NULL;
     bool *emails = NULL;
-    int mail;
+    int mail = -1;
     int *names = NULL;
     int plithos,megethos,many = -1;
                 do {
@@ -230,7 +230,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                              write(newsock,"-ERR invalid password - you need to enter a password first \r\n",strlen("-ERR invalid password - you need to enter a password first \r\n"));
                          } else {
                             //write(newsock,"PASS\r\n",6);
-                            char *password = NULL;
+                            //char *password = NULL;
                             if(userIn && !transaction) {
                                 if(passwordCheck(username,passw)){
                                     transaction = true;
