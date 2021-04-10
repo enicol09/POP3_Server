@@ -133,9 +133,10 @@ bool activeStats(const char *username,bool *emails,int *count,int *size ){
  * */
 int findMail(int mail,int *names,int howMany){
     int i = 0;
-    for(i=0;i<howMany;i++)
+    for(i=0;i<howMany;i++){
         if(names[i] == mail)
             return i;
+        }
     return -1;
 }
 /**
@@ -229,8 +230,11 @@ bool update(const char *username,bool *emails,int *names,int howMany){
     for(i=0;i<howMany;i++){
         char str[1000];
         itoa(names[i],str);
-        if (!emails[i])
-            actuallyDeleteFile(username,str);
+        if (!emails[i]){     
+		bool flag = actuallyDeleteFile(username,str);
+		if(!flag)
+		  return false;
+          }
     }
     return true;
 }
@@ -282,11 +286,28 @@ bool fillNames(const char *username,int *names){
  * @param int *names the names of the emails
  * @return bool if everything its okay true, otherwise false
  * */
-bool listEmpty(const char *username,bool *emails,int *names,int howMany){
+bool listEmpty(const char *username,bool *emails,int *names,int howMany,int newsock){
    // printf("=========== EMPTY LIST ===========\n");
+    int plithos,megethos;
+    activeStats(username,emails,&plithos,&megethos);
+    char print[256];
+    bzero(print,256);
+    strcat(print,"+OK ");
+    char lol[1000];
+    bzero(lol,1000);
+    itoa(plithos,lol);
+    strcat(print,lol);
+    strcat(print," (messages) (");
+    char lol2[1000];
+    bzero(lol2,1000);
+    itoa(megethos,lol2);
+    strcat(print,lol2);
+    strcat(print, " octets) \r\n");
+    write(newsock,print,strlen(print)); 
     int i = 0;
     for(i=0;i<howMany;i++)
-        list(username,names[i],emails,names,howMany);
+        list(username,names[i],emails,names,howMany,newsock,false);
+    write(newsock,". \r\n",4); 
     return true;
 }
 /**
@@ -302,9 +323,18 @@ bool listEmpty(const char *username,bool *emails,int *names,int howMany){
  * @param int *names the names of the emails
  * @return bool if everything its okay true, otherwise false
  * */
-bool list(const char *username,int mail, bool *emails,int *names,int howMany){
+bool list(const char *username,int mail, bool *emails,int *names,int howMany,int newsock,bool isOkay){
     int place = findMail(mail,names,howMany);
-    if(!(place < howMany && place >=0 && emails[place])){
+    if(place == -1 || emails[place] == false){
+        char print[256];
+        bzero(print,256);
+        strcat(print,"-ERR no such message, only ");
+        char lol[1000];
+        bzero(lol,1000);
+        itoa(howMany,lol);
+        strcat(print,lol);
+	strcat(print, " in mailbox\r\n");
+    	write(newsock,print,strlen(print)); 
         return false;
     }
     bool temp[howMany];
@@ -315,6 +345,21 @@ bool list(const char *username,int mail, bool *emails,int *names,int howMany){
     int size,null;
     activeStats(username,temp,&null,&size);
     //printf("%d %d\n",names[place],size);
+    char print[256];
+    bzero(print,256);
+    if(isOkay)
+      strcat(print,"+OK ");
+    char lol[1000];
+    bzero(lol,1000);
+    itoa(mail,lol);
+    strcat(print,lol);
+    strcat(print," ");
+    char lol2[1000];
+    bzero(lol2,1000);
+    itoa(size,lol2);
+    strcat(print,lol2);
+    strcat(print, " \r\n");
+    write(newsock,print,strlen(print)); 
     return true;
 }
 /**

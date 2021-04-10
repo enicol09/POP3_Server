@@ -152,8 +152,6 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
 
                    int code = decodeInput(input);
                        if(code == 0){
-                       
-
                            if(userIn)
                                write(newsock,"You have already connected \r\n",30);
                             else {
@@ -178,6 +176,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                             strcpy(username,user);
                             if(userExists(user) == false){
                                 char stupidError[256];
+                                bzero(stupidError,256);
                                 strcat(stupidError,"-ERR this is stupid, i have never in my life heard of mailbox |");
                                 strcat(stupidError,user);
                                 strcat(stupidError,"|\r\n\0");
@@ -186,12 +185,14 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                                 close(newsock);
                             }
                             else{
-                              char stupidMsg[120];
+                              char stupidMsg[256];
+                              bzero(stupidMsg,256);
                               strcat(stupidMsg,"+OK ");
                               strcat(stupidMsg,user);
-                              strcat(stupidMsg," is a valid mailbox, bravo dude :)\r\n\0"); 
-                              
-                             write(newsock,stupidMsg,strlen(stupidMsg));
+                              strcat(stupidMsg," is a valid mailbox, bravo dude :)\r\n\0");
+                              printf("%s\r\n",stupidMsg); 
+                              write(newsock,stupidMsg,strlen(stupidMsg));
+                              //bzero(stupidMsg, sizeof stupidMsg);
                             }
                             
                             
@@ -250,12 +251,15 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                             if(transaction){
                                 activeStats(username,emails,&plithos,&megethos);
                                 char stat[256];
+                                bzero(stat,256);
                                 char lol[1000];
+                                bzero(lol,1000);
                                 strcat(stat,"+OK ");
                                 itoa(plithos,lol);
                                 strcat(stat,lol);
                                 strcat(stat," ");
                                 char lol2[1000];
+                                bzero(lol2,1000);
                                 itoa(megethos,lol2);
                                 strcat(stat,lol2);
                                 strcat(stat,"\r\n");
@@ -263,12 +267,30 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                             }
                         }
                         else if (code ==3){
-
-                            write(newsock,"LIST\r\n",6);
-                            if(transaction){
-                                list(username,mail,emails,names,many);
-                                listEmpty(username,emails,names,many);
+			     int size = strlen(input) - 4;
+                            char listMe[size];
+                            bzero(listMe,size);
+                            int position = 5;
+                            int c = 0;
+                            int length = size;
+                            while ( c < length) {
+                               if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                               listMe[c] = input[position];
+                               c++;
+                               position++;
+                               }
+                               else {
+                               break;}
                             }
+                            listMe[c] = '\0';
+                       if(transaction){
+                            if(c==0){
+                            	listEmpty(username,emails,names,many,newsock);
+                            }
+                            else{
+                               list(username,atoi(listMe),emails,names,many,newsock,true);
+                            } 
+                          }
                         }
                         else if(code == 4){
                             write(newsock,"RETR\r\n",6);
@@ -297,9 +319,10 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                             if(transaction){
                                 if(deleteMail(mail,emails,many,names)){
                                    char print[100];
+                                   bzero(print,100);
                                    strcat(print,"+OK message ");
                                    strcat(print, toDel);
-                                   strcat(print, " deleted\0\r\n");
+                                   strcat(print, " deleted\r\n");
                                    write(newsock, print ,strlen(print)); 
                                 }
                                 else {
@@ -310,11 +333,44 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                               }
 
                         else if (code == 6 ) {
-                            write(newsock,"+OK\r\n",5);
                             if(transaction){
-                                update(username,emails,names,many);
-                                nextLoop = false;
+                                bool okay = update(username,emails,names,many);
+                                if(!okay){
+                                	write(newsock, "-ERR some deleted messages not removed\r\n" ,strlen("-ERR some deleted messages not removed\r\n")); 
+                                }
+                                else{
+
+                                int left = howMany(username);
+                                //printf("hello %d\r\n",left);
+                             	 if(left == 0){
+                             	    char print[256];
+                             	    bzero(print,256);
+                                   strcat(print,"+OK ");
+                                   strcat(print, username);
+                                   strcat(print, " POP3 server signing off (mailbox empty)\n\r\n");
+                                   write(newsock, print ,strlen(print)); 
+                             	 
+                             	 	}
+                             	 else{
+                             	    char print[256];
+                             	    bzero(print,256);
+                                   strcat(print,"+OK ");
+                                   strcat(print, username);
+                                   strcat(print, " POP3 server signing off (");
+                                   char lol[1000];
+                                   bzero(lol,1000);
+                                   itoa(left,lol);
+                                   strcat(print,lol);
+                                   strcat(print, " messages left)\n\r\n");
+                                   //printf("%s\r\n",print);
+                                   write(newsock, print ,strlen(print)); 
+                             	 
+                             	 	}
+                             
+                             	 }
+                                
                             }
+                            nextLoop = false;
                         }
                         else {
                             write(newsock,"-ERR\r\n",6);
