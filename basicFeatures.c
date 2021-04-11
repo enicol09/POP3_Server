@@ -1,14 +1,12 @@
 #include "library.h"
-/**
- * Driver class to see the use of the mail utilities
- * 
+#ifdef UTIL_TEST
 int main(int argc, char* argv[])
 {
     bool transaction = false;
     bool userIn = false;
     bool nextLoop = true;
-    char *inputs[] = {"1","mbofos01","9","1111","3","1","7"};
-    char *folder= NULL;
+    char *inputs[] = {"1","mbofos01","9","1111","2","4","6","9","7"};
+    char *folder= "mbofos01";
     bool *emails = NULL;
     int *names = NULL;
     int plithos,megethos,many = -1;
@@ -18,6 +16,7 @@ int main(int argc, char* argv[])
         int code = atoi(inputs[counter]);
         if(code == 1){
             printf("----enter user\n");
+            printf("Username: %s\n",folder);
             userIn = true;
             folder = inputs[counter+1];
             many = howMany(inputs[code]);
@@ -49,7 +48,7 @@ int main(int argc, char* argv[])
         }
         else if(transaction && code == 4){
             printf("----see empty list\n");
-            listEmpty(folder,emails,names,many);
+            listEmpty(folder,emails,names,many,1);
         }
         else if(transaction && code == 5){
             printf("----updating\n");
@@ -58,7 +57,7 @@ int main(int argc, char* argv[])
         else if(transaction && code == 6){
             printf("----list of %d\n",atoi(inputs[counter+1]));
             counter++;
-            list(folder,atoi(inputs[counter]),emails,names,many);
+            list(folder,atoi(inputs[counter]),emails,names,many,1,true);
         }
         else if(transaction && code == 7){
             printf("----quit\n");
@@ -77,4 +76,4 @@ int main(int argc, char* argv[])
         free(emails);
         free(names);
 }
-*/
+#endif

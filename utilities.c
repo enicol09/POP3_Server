@@ -306,7 +306,8 @@ bool listEmpty(const char *username,bool *emails,int *names,int howMany,int news
     write(newsock,print,strlen(print)); 
     int i = 0;
     for(i=0;i<howMany;i++)
-        list(username,names[i],emails,names,howMany,newsock,false);
+    	if(emails[i])
+	        list(username,names[i],emails,names,howMany,newsock,false);
     write(newsock,". \r\n",4); 
     return true;
 }
@@ -375,26 +376,64 @@ bool list(const char *username,int mail, bool *emails,int *names,int howMany,int
  * @param const char *username 
  * @return bool if everything its okay true, otherwise false
  * */
-bool retrieveMail(int name,char *username) {
+bool retrieveMail(int name,char *username, bool *emails,int *names,int howMany,int newsock) {
+    /****************************** CHECK EXISTANCE ***********************/
     char filename[10];
+    char print[256];
+    char lol[1000];
+    char toPrint[OUTPUT_MESSAGE_SIZE+3];
+    char buf[OUTPUT_MESSAGE_SIZE];
+    int place = findMail(name,names,howMany);
+    printf("Mail %d to retr: %d\r\n",name,place);
+    if( place == -1 || emails[place] == false)
+    {
+    	write(newsock,"-ERR no such message\r\n",strlen("-ERR no such message\r\n"));
+    	return false; 
+    }
+    /****************************** GET STATS ****************************/
+    bool temp[howMany];
+    int i =0;
+    for(i=0;i<howMany;i++)
+        temp[i] = false;
+    temp[place] = true;
+    int message_size,null;
+    activeStats(username,temp,&null,&message_size);
+    /****************************** PRINT STATS **************************/
 
+    bzero(print,256);
+    strcat(print,"+OK ");
+
+    bzero(lol,1000);
+    itoa(message_size,lol);
+    strcat(print,lol);
+    strcat(print, " octets\r\n");
+    write(newsock,print,strlen(print)); 
+    /****************************** OPEN FILE ***************************/
     itoa(name,filename);
-    //printf("%s\n", filename);
-    int size = strlen(username)+strlen(filename)+3;
-    char s1[size];
+    int name_size = strlen(username)+strlen(filename)+3;
+    char s1[name_size];
     strcpy(s1,username);
     strcat(s1,"/");
     strcat(s1,filename);
-    s1[size-1]='\0';
-    //printf("%s\n", s1);
+    s1[name_size-1]='\0';
     int fd = open(s1, O_RDONLY, 0);
     if(fd < 0)
         return false;
-    //printf("%d\n", fd);
-    char buf[50000];
-    read(fd, buf, 50000-1);
-    //buf[50000-1] = '\0';
-    //printf("%s\n", buf);
+    /****************************** READ FILE ***************************/
+    int loop_iterations = message_size / OUTPUT_MESSAGE_SIZE + 1;
+    for(i=0;i<loop_iterations;i++){
+
+	    bzero(buf,OUTPUT_MESSAGE_SIZE);
+	    read(fd, buf, OUTPUT_MESSAGE_SIZE);
+	    bzero(toPrint,OUTPUT_MESSAGE_SIZE+3);
+	    if(buf[0] == '.')
+	    	write(newsock,".",1);
+	    write(newsock,buf,strlen(buf));
+	    write(newsock,"\r\n",strlen("\r\n"));
+    }
+    /****************************** CLOSE PRINTING **********************/
+    write(newsock,".\r\n",strlen(".\r\n"));
+    close(fd);
     return true;
 }
 /**
@@ -422,5 +461,8 @@ bool passwordCheck(char *username,char *passtry){
     //printf("%d\n", fd);
     char buf[100];
     read(fd, buf, 100-1);
+    if(buf[strlen(buf)-1] == '\n')
+    	buf[strlen(buf)-1] = '\0';
+    close(fd);
     return strcmp(passtry,buf) == 0;
 }

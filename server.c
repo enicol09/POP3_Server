@@ -34,6 +34,10 @@ bool argument[]={
     true,
     false
 };
+
+void sig_handler(int signum){
+  printf(" \r\n");
+}
 void toUpper(char *input){
    int i;
    for (i = 0; input[i]!='\0'; i++) {
@@ -113,7 +117,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
     }
 
  printf("Listening for connections to port %d\n", port);
-
+do{ ///sad
      clientptr = (struct sockaddr *) &client;
      clientlen = sizeof client;
      if ((newsock = accept(sock, clientptr, &clientlen)) < 0)
@@ -142,6 +146,10 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
     int mail = -1;
     int *names = NULL;
     int plithos,megethos,many = -1;
+    signal(SIGALRM,sig_handler); // Register signal handler
+ 
+
+ 
                 do {
                    bzero(input, sizeof input); /* Initialize buffer */
                    if (read(newsock, input, sizeof input) < 0)
@@ -149,7 +157,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                        perror("read");
                        exit(1);
                       }
-
+		    //alarm(60);  // Scheduled alarm after 2 seconds
                    int code = decodeInput(input);
                        if(code == 0){
                            if(userIn)
@@ -293,9 +301,28 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                           }
                         }
                         else if(code == 4){
-                            write(newsock,"RETR\r\n",6);
-                            if(transaction){
-                                retrieveMail(mail,username);
+                            int size = strlen(input) - 4;
+                            char retrMe[size];
+                            bzero(retrMe,size);
+                            int position = 5;
+                            int c = 0;
+                            int length = size;
+                            while ( c < length) {
+                               if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                               retrMe[c] = input[position];
+                               c++;
+                               position++;
+                               }
+                               else {
+                               break;}
+                            }
+                            retrMe[c] = '\0';
+//                            write(newsock,"RETR\r\n",6);
+                            if(transaction && c!=0){
+                                retrieveMail(atoi(retrMe),username,emails,names,many,newsock);
+                            }
+                            else{
+	                            write(newsock,"-ERR\r\n",6);                    
                             }
                         }
                         else if (code == 5 ) {
@@ -392,6 +419,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
          close(newsock); /* Close socket */
          printf("Connection from %s is closed\n", rem -> h_name);
          //exit(0);
+         }while(true);
         close(sock);
         return 0;   
     }
