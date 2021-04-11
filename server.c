@@ -80,12 +80,9 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
  struct sockaddr *serverptr, *clientptr;
  struct hostent *rem;
 
+int thread_number;
+readConfig(&thread_number,&port);
 
- if (argc < 2)
-    { /* Check if server's port number is given */
-     printf("Please give the port number\n");
-     exit(1);
-    }
  /* The AF_INET address family is the address family for IPv4, AF_INET6 for IPv6, AF_BLUETOOTH for Bluetooth */
  /* IPPROTO_TCP is chosen for the TCP protocol if the type was set to SOCK_STREAM */
  /* IPPROTO_UDP is chosen for the UDP protocol if the type was set to SOCK_DGRAM */
@@ -95,7 +92,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
      exit(1);
     }
 
- port = atoi(argv[1]); /* Convert port number to integer */
+ //port = atoi(argv[1]); /* Convert port number to integer */
  server.sin_family = AF_INET; /* Internet domain */
  /* When INADDR_ANY (0.0.0.0) is specified, the socket will be bound to all local interfaces */
  /* INADDR_LOOPBACK (127.0.0.1) always refers to the local host via the loopback device */
@@ -118,6 +115,8 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
 
  printf("Listening for connections to port %d\n", port);
 do{ ///sad
+
+        
      clientptr = (struct sockaddr *) &client;
      clientlen = sizeof client;
      if ((newsock = accept(sock, clientptr, &clientlen)) < 0)
@@ -125,6 +124,11 @@ do{ ///sad
          perror("accept");
          exit(1);
         } /* Accept connection */
+        
+
+        
+
+        
        write(newsock,OKAY,4);
        write(newsock,"POP3 server ready\r\n",19);
      //reverse DNS
@@ -146,7 +150,7 @@ do{ ///sad
     int mail = -1;
     int *names = NULL;
     int plithos,megethos,many = -1;
-    signal(SIGALRM,sig_handler); // Register signal handler
+    //signal(SIGALRM,sig_handler); // Register signal handler
  
 
  
