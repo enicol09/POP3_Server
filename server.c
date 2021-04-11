@@ -186,7 +186,7 @@ do{ ///sad
                             if(userExists(user) == false){
                                 char stupidError[256];
                                 bzero(stupidError,256);
-                                strcat(stupidError,"-ERR heard of mailbox ");
+                                strcat(stupidError,"-ERR never heard of mailbox ");
                                 strcat(stupidError,user);
                                 strcat(stupidError,"\r\n\0");
                                 write(newsock,stupidError,strlen(stupidError));
@@ -397,7 +397,7 @@ do{ ///sad
                              	 }
                                 
                             }
-                            else{
+                            else if (userIn){
                                 char print[256];
                              	bzero(print,256);
                                 strcat(print,"+OK ");
@@ -463,19 +463,67 @@ do{ ///sad
                                break;}
                             }
                             param2[c] = '\0';   
-                            printf("%s %s \r\n ",param1,param2); 
-                            mkdir(param1,0777);
+                            if(c==0){
+                            write(newsock,"-ERR enter a password\r\n" ,strlen("-ERR enter a password\\r\n" ));   
                             
-                            writePass(param1,param2);
-                            
+                            }
+                            else if(!userExists(param1)){ 
+	                       mkdir(param1,0777);
+                            	writePass(param1,param2);
+                            	 char stat[256];
+                                bzero(stat,256);
+                                strcat(stat,"+OK Welcome ");
+                                strcat(stat,param1);
+                                strcat(stat,"!\r\n");
+                                write(newsock,stat,strlen(stat)); 
+                            }
+                            else{
+                            write(newsock,"-ERR this user already exist\r\n" ,strlen("-ERR this user already exist\r\n" ));                             
+                            }
                         }
                         
                         
                         else if ( code == 10) {
-                        //end
+                            int size = strlen(input) - 4;
+                            char param1[size];
+                            int position = 5;
+                            int c = 0;
+                            int length = size;
+                            while ( c < length) {
+                               if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                               param1[c] = input[position];
+                               c++;
+                               position++;
+                               }
+                               else {
+                               break;}
+                            }
+                            
+                            position++;
+                            param1[c] = '\0';
+                            c = 0;
+                            char param2[size];
+                              while ( c < length) {
+                               if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                               param2[c] = input[position];
+                               c++;
+                               position++;
+                               }
+                               else {
+                               break;}
+                            }
+                            param2[c] = '\0';  
+	                    if(c==0){
+                           	 write(newsock,"-ERR enter a receiver\r\n" ,strlen("-ERR enter a receiver\r\n" ));    
+                            }
+                            else if(!userExists(param2) ){
+                            	write(newsock,"-ERR This user does not exist\r\n",strlen("-ERR This user does not exist\r\n"));
+                        	}
+                            else{
+                         	if(sendEmailTo(username,param1,emails,names,many,param2,newsock))
+	                            	write(newsock,"+OK email send\r\n",strlen("+OK email send\r\n"));
+                            } 
                          }
-                        
-                     
                         else {
                             write(newsock,"-ERR\r\n",6);
                         }

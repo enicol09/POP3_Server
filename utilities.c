@@ -430,6 +430,7 @@ bool retrieveMail(int name,char *username, bool *emails,int *names,int howMany,i
     strcat(print,lol);
     strcat(print, " octets\r\n");
     write(newsock,print,strlen(print)); 
+    
     /****************************** OPEN FILE ***************************/
     itoa(name,filename);
     int name_size = strlen(username)+strlen(filename)+3;
@@ -456,6 +457,55 @@ bool retrieveMail(int name,char *username, bool *emails,int *names,int howMany,i
     /****************************** CLOSE PRINTING **********************/
     write(newsock,".\r\n",strlen(".\r\n"));
     close(fd);
+    return true;
+}
+
+bool sendEmailTo(char *username,char *mail, bool *emails,int *names,int howMany,char *to,int socket){
+  int pointer = atoi(mail);
+  int place = findMail(pointer,names,howMany);
+  char buf[OUTPUT_MESSAGE_SIZE];
+  if( place == -1 || emails[place] == false)
+    {
+    	write(socket,"-ERR no such message\r\n",strlen("-ERR no such message\r\n"));
+    	return false; 
+    }
+    /****************************** OPEN FILE ***************************/
+
+    int name_size = strlen(username)+strlen(mail)+3;
+    char s1[name_size];
+    strcpy(s1,username);
+    strcat(s1,"/");
+    strcat(s1,mail);
+    s1[name_size-1]='\0';
+    char TO[name_size];
+    strcpy(TO,to);
+    strcat(TO,"/");
+    strcat(TO,mail);
+    TO[name_size-1]='\0';
+    int fd = open(s1, O_RDONLY, 0);
+    int new_file = open(TO, O_WRONLY | O_CREAT, 0644);
+    /****************************** GET STATS ****************************/
+    bool temp[howMany];
+    int i =0;
+    for(i=0;i<howMany;i++)
+        temp[i] = false;
+    temp[place] = true;
+    int message_size,null;
+    activeStats(username,temp,&null,&message_size);
+    if(fd < 0 || new_file < 0){ 
+        write(socket,"-ERR something went wrong\r\n",strlen("-ERR something went wrong\r\n"));
+        return false;
+      }
+    /****************************** READ FILE ***************************/
+    int loop_iterations = message_size / OUTPUT_MESSAGE_SIZE + 1;
+    for(i=0;i<loop_iterations;i++){
+	    bzero(buf,OUTPUT_MESSAGE_SIZE);
+	    read(fd, buf, OUTPUT_MESSAGE_SIZE);
+	    write(new_file,buf,strlen(buf));
+    }
+
+    close(fd);
+    close(new_file);
     return true;
 }
 /**

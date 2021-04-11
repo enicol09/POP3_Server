@@ -2,4 +2,4 @@
 # The Number of Threads in the Threadpool
 THREADS=46
 # The Port number of the email server
-PORT=9999
+PORT=3337

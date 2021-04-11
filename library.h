@@ -25,6 +25,7 @@ bool listEmpty(const char *username,bool *emails,int *names,int howMany,int news
 bool fillNames(const char *username,int *names);
 bool retrieveMail(int name,char *username, bool *emails,int *names,int howMany,int newsock);
 bool startsWith(char *str,char *start);
+bool sendEmailTo(char *username,char *mail, bool *emails,int *names,int howMany,char *to,int socket);
 
 int fileSize(const char *username, const char *filename);
 int howMany(const char *username);
