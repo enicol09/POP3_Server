@@ -163,6 +163,28 @@ bool deleteMail(int mail,bool *emails,int howMany,int *names){
         
     return true;
 }
+
+void writePass(char *username,char *password){
+    char s1[MAX_PATH];
+    strcpy(s1,username);
+    strcat(s1,"/PASSWORD");
+   
+    int fd = open(s1, O_WRONLY | O_CREAT , 0644); 
+      
+      
+    if (fd ==-1)
+    {
+        // print program detail "Success or failure"
+        perror("fd write");                 
+    }
+    
+    else {
+         write(fd,password,strlen(password));
+    }
+    
+    close(fd);
+
+}
 /**
  * @brief This function actually deletes a file from the directory
  * 

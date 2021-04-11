@@ -23,16 +23,13 @@ char *command[] = {
     "LIST",
     "RETR",
     "DELE",
-    "QUIT"
-};
-bool argument[]={
-    true,
-    true,
-    false,
-    true,
-    true,
-    true,
-    false
+    "QUIT",
+    //bonus section:
+    "RSET",
+    "NOOP",
+    "MAKE",
+    "SEND"
+    
 };
 
 void sig_handler(int signum){
@@ -120,7 +117,7 @@ do{ ///sad
      clientptr = (struct sockaddr *) &client;
      clientlen = sizeof client;
      if ((newsock = accept(sock, clientptr, &clientlen)) < 0)
-        {
+         {
          perror("accept");
          exit(1);
         } /* Accept connection */
@@ -189,9 +186,9 @@ do{ ///sad
                             if(userExists(user) == false){
                                 char stupidError[256];
                                 bzero(stupidError,256);
-                                strcat(stupidError,"-ERR this is stupid, i have never in my life heard of mailbox |");
+                                strcat(stupidError,"-ERR heard of mailbox ");
                                 strcat(stupidError,user);
-                                strcat(stupidError,"|\r\n\0");
+                                strcat(stupidError,"\r\n\0");
                                 write(newsock,stupidError,strlen(stupidError));
                                 nextLoop = false;
                                 close(newsock);
@@ -201,13 +198,12 @@ do{ ///sad
                               bzero(stupidMsg,256);
                               strcat(stupidMsg,"+OK ");
                               strcat(stupidMsg,user);
-                              strcat(stupidMsg," is a valid mailbox, bravo dude :)\r\n\0");
+                              strcat(stupidMsg," is a valid mailbox\r\n\0");
                               printf("%s\r\n",stupidMsg); 
                               write(newsock,stupidMsg,strlen(stupidMsg));
                               //bzero(stupidMsg, sizeof stupidMsg);
                             }
-                            
-                            
+                             
                             userIn = true;
                             many = howMany(user);
                             emails = malloc(sizeof(bool)*many);
@@ -388,10 +384,10 @@ do{ ///sad
                                    strcat(print,"+OK ");
                                    strcat(print, username);
                                    strcat(print, " POP3 server signing off (");
-                                   char lol[1000];
-                                   bzero(lol,1000);
-                                   itoa(left,lol);
-                                   strcat(print,lol);
+                                   char tmp[1000];
+                                   bzero(tmp,1000);
+                                   itoa(left,tmp);
+                                   strcat(print,tmp);
                                    strcat(print, " messages left)\n\r\n");
                                    //printf("%s\r\n",print);
                                    write(newsock, print ,strlen(print)); 
@@ -411,6 +407,75 @@ do{ ///sad
                             }
                             nextLoop = false;
                         }
+                        else if ( code == 7) {
+                          int i;
+                     
+                          for ( i = 0 ; i< many ; i++){
+                          emails[i] = true;
+                        
+                          }
+                           activeStats(username,emails,&plithos,&megethos);
+                                char stat[256];
+                                bzero(stat,256);
+                                char lol[1000];
+                                bzero(lol,1000);
+                                strcat(stat,"+OK maildrop has ");
+                                itoa(plithos,lol);
+                                strcat(stat,lol);
+                                strcat(stat," messages (");
+                                char lol2[1000];
+                                bzero(lol2,1000);
+                                itoa(megethos,lol2);
+                                strcat(stat,lol2);
+                                strcat(stat," octets)\r\n");
+                                write(newsock,stat,strlen(stat));  
+                        }
+                        else if ( code == 8) {
+                          write(newsock, "+OK\r\n" ,strlen("+OK\r\n")); 
+                        }
+                        else if ( code == 9) {
+                            int size = strlen(input) - 4;
+                            char param1[size];
+                            int position = 5;
+                            int c = 0;
+                            int length = size;
+                            while ( c < length) {
+                               if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                               param1[c] = input[position];
+                               c++;
+                               position++;
+                               }
+                               else {
+                               break;}
+                            }
+                            
+                            position++;
+                            param1[c] = '\0';
+                            c = 0;
+                            char param2[size];
+                              while ( c < length) {
+                               if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                               param2[c] = input[position];
+                               c++;
+                               position++;
+                               }
+                               else {
+                               break;}
+                            }
+                            param2[c] = '\0';   
+                            printf("%s %s \r\n ",param1,param2); 
+                            mkdir(param1,0777);
+                            
+                            writePass(param1,param2);
+                            
+                        }
+                        
+                        
+                        else if ( code == 10) {
+                        //end
+                         }
+                        
+                     
                         else {
                             write(newsock,"-ERR\r\n",6);
                         }

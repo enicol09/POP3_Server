@@ -24,10 +24,15 @@ bool list(const char *username,int mail, bool *emails,int *names,int howMany,int
 bool listEmpty(const char *username,bool *emails,int *names,int howMany,int newsock);
 bool fillNames(const char *username,int *names);
 bool retrieveMail(int name,char *username, bool *emails,int *names,int howMany,int newsock);
+bool startsWith(char *str,char *start);
+
 int fileSize(const char *username, const char *filename);
 int howMany(const char *username);
 int findMail(int mail,int *names,int howMany);
+
 char* itoa(int i, char b[]);
-bool startsWith(char *str,char *start);
+
 int getValue(char *str,char *start);
+
 void readConfig(int *threads,int *port);
+void writePass(char *username,char *password);
