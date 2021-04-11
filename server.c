@@ -370,6 +370,14 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
                              	 }
                                 
                             }
+                            else{
+                                char print[256];
+                             	bzero(print,256);
+                                strcat(print,"+OK ");
+                                strcat(print, username);
+                                strcat(print, " POP3 server signing off \r\n");
+                                write(newsock, print ,strlen(print));
+                            }
                             nextLoop = false;
                         }
                         else {
@@ -384,6 +392,6 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
          close(newsock); /* Close socket */
          printf("Connection from %s is closed\n", rem -> h_name);
          //exit(0);
-
-        return 0;
+        close(sock);
+        return 0;   
     }
