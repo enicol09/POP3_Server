@@ -23,6 +23,7 @@ int dequeue(request *r) {
         r->socket = front->socket;
         r->client_ptr = front->client_ptr;
         request *temp = front;
+        front = front->new;
         if (front==NULL)
         {
             rear = NULL;
