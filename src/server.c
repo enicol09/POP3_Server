@@ -61,14 +61,35 @@ void manage_request(int *client, struct sockaddr_in *client2) {
     int plithos,megethos,many = -1;
     //signal(SIGALRM,sig_handler); // Register signal handler
 
-
+   
+  
     do {
-        bzero(input, sizeof input); /* Initialize buffer */
+       
+    fd_set active_fd_set;
+    FD_ZERO (&active_fd_set);
+    FD_SET (*client, &active_fd_set);
+    
+    struct timeval timeout;      
+    timeout.tv_sec = 60;
+    timeout.tv_usec = 0;
+  
+    int result = select(*client +1, &active_fd_set, NULL, NULL, &timeout);
+      
+       if(result<=0) {
+          write(*client,"-ERR connection closed due to inactivity \r\n",strlen("-ERR connection closed due to inactivity \r\n"));
+          nextLoop= false;
+      }
+      
+      else {
+      
+       bzero(input, sizeof input); /* Initialize buffer */
+       // alarm(60);  
         if (read(*client, input, sizeof input) < 0)
         { /* Receive message */
             perror("read");
             exit(1);
         }
+               
         //alarm(60);  // Scheduled alarm after 2 seconds
         int code = decodeInput(input);
             if(code == 0){
@@ -426,11 +447,19 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                         write(*client,"+OK email send\r\n",strlen("+OK email send\r\n"));
                 } 
             }
+               else if(code == 11) {
+                         
+                         char *help = "THE OPTIONS THAT YOU HAVE ARE: \n 1.USER \n 2.PASS (argument your password)\n 3.STAT \n 4.LIST (maybe with argument)\n 5.RETR (argument)\n 6.DELE (argument) \n 7.QUIT \n 8.NOOP\n 9.RSET\n 10.MAKE (argument user , argument password)\n 11.SEND (argument num of email, user to send the msg) \n 12.HELP\n.\r\n";
+                          write(*client,help,strlen(help));
+                            
+                         }
             else {
                 write(*client,"-ERR\r\n",6);
             }
             bzero(input, sizeof input);
+            }
         } while (nextLoop); /* Finish on "end" */
+        
         free(emails);
         free(names);
         close(*client); /* Close socket */
@@ -463,8 +492,23 @@ bool checkFormat(char *input){
 
 int decodeInput(char *input){
     //toUpper(input);
-
+    
     int i = 0, function = -1;
+      int sp = -1;
+    for ( i = 0 ; i < strlen(input); i++){
+       if(input[i]==' ') {
+         sp = i; 
+         break; }
+     }
+     
+     if(sp == -1){
+       if(input[4]!='\r'){
+         return function;
+         }
+     }
+       else if ( sp !=4 ) {
+       return function;
+       }
     char code[5];
     for(i=0;i<4;i++){
         code[i] = input[i];
