@@ -580,9 +580,10 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
             exit(1);
         } /* Accept connection */
 
-        // if (alive_threads == thread_number-1) {
-        //     //close socket
-        // }
+        if (alive_threads == thread_number-1) {
+            close(newsock);
+            continue;
+        }
 
         //Copy socket
         int *new_req_socket = malloc(sizeof(int));
