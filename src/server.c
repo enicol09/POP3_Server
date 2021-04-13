@@ -7,6 +7,7 @@ pthread_cond_t cond_var = PTHREAD_COND_INITIALIZER;
 
 int thread_number;  //Total threads in pool
 int alive_threads;  //Number of threads that are active
+int sock;  //Global so it can be used in sig_handler
 
 void *manage_thread(void *arg) {
     //Threads run forever
@@ -46,7 +47,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
         perror("gethostbyaddr");
         exit(1);
     }
-
+     
     printf("Accepted connection from %s\n", rem -> h_name);
 
     //display(newsock);
@@ -436,8 +437,10 @@ void manage_request(int *client, struct sockaddr_in *client2) {
         printf("Connection from %s is closed\n", rem -> h_name);
 }
 
-void sig_handler(int signum){
-  printf(" \r\n");
+void sig_handler(int signum,int sock){
+  printf("Server Closing\r\n");
+  close(sock);
+  exit(1);
 }
 
 void toUpper(char *input){
@@ -478,7 +481,7 @@ int decodeInput(char *input){
 
 int main(int argc, char *argv[]) /* Server with Internet stream sockets */
 {
-    int port, sock, newsock, serverlen;//, clientlen;
+    int port,newsock, serverlen;//, clientlen;
     socklen_t clientlen;
     struct sockaddr_in server, client;
     struct sockaddr *serverptr, *clientptr;
@@ -522,7 +525,7 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
         perror("listen");
         exit(1);
     }
-
+    signal(SIGINT,sig_handler); // Register signal handler
     printf("Listening for connections to port %d\n", port);
     do{ ///sad
         clientptr = (struct sockaddr *) &client;
@@ -546,7 +549,8 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
         enqueue(new_req_socket, &client);
         alive_threads++;
         pthread_cond_signal(&cond_var);
-        pthread_mutex_unlock(&mutex);       
+        pthread_mutex_unlock(&mutex);   
+            
             //exit(0);
     }while(true);
     close(sock);

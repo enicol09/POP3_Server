@@ -28,7 +28,7 @@ extern char *command[] = {
 
 void *manage_thread(void *arg);
 void manage_request(int *client, struct sockaddr_in *client2);
-void sig_handler(int signum);
+void sig_handler(int signum,int sock);
 void toUpper(char *input);
 int getLength();
 bool checkFormat(char *input);
