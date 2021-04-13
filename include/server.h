@@ -23,7 +23,8 @@ extern char *command[] = {
     "RSET",
     "NOOP",
     "MAKE",
-    "SEND"
+    "SEND",
+    "HELP"
 };
 
 void *manage_thread(void *arg);

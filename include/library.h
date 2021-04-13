@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include<signal.h>
 #include <fcntl.h> 
+#include <sys/select.h>
 
 #define MAX_PATH 100
 #define OUTPUT_MESSAGE_SIZE 512
