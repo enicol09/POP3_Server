@@ -1,0 +1,21 @@
+/**
+
+@mainpage https://www.cs.ucy.ac.cy/~dzeina/courses/epl421/assignments/as4.pdf
+@author Elia Nicolaou,Pantelis Mikelli, Michail-Panagiotis Mpofos
+@filename utilities.c,basicFeatures.c,configManagement.c,queue.c,server.c,server,h,library.h,queue.h
+@bugs not known bugs.
+
+How to compile: make 
+How to run: 
+ - Server : ./pop3
+ - Client : telnet localhost portnumber ( given by the server )
+
+ Assigment's purpose
+===================
+The purpose of the application is to get acquainted with various advanced technical configurations interrogative responses, interprocess communications, 
+TCP / IP communications and multinomial competition in the language C. 
+The second purpose is to do the required work as group in order to implement the program.
+Create a server based on POP3 protocol.
+
+
+*/
