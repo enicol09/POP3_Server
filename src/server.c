@@ -146,7 +146,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                 names = malloc(sizeof(int)*many);
                 fillNames(user,names);
                 }
-            }else if(code ==1 ){
+            }else if(code ==1 &&  !transaction ){
                 
                 if(userIn){
                 
@@ -186,7 +186,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                 }
                 else{
                 write(*client,"-ERR You have to insert the username first - please insert USER command :( \r\n",strlen("-ERR You have to insert the username first - please insert USER command :( \r\n")); }
-            } else if (code == 2){
+            } else if (code == 2 && transaction){
                 
                 if(transaction){
                     activeStats(username,emails,&plithos,&megethos);
@@ -206,7 +206,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                     write(*client,stat,strlen(stat)); 
                 }
             }
-            else if (code ==3){
+            else if (code ==3 && transaction ){
                 int size = strlen(input) - 4;
                 char listMe[size];
                 bzero(listMe,size);
@@ -232,7 +232,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                     } 
                     }
                 }
-            else if(code == 4){
+            else if(code == 4 && transaction ){
                 int size = strlen(input) - 4;
                 char retrMe[size];
                 bzero(retrMe,size);
@@ -257,7 +257,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                     write(*client,"-ERR\r\n",6);                    
                 }
             }
-            else if (code == 5 ) {
+            else if (code == 5 && transaction ) {
                 int size = strlen(input) - 4;
                 char toDel[size];
                 int position = 5;
@@ -290,7 +290,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                     
                 }
             }
-            else if (code == 6 ) {
+            else if (code == 6 && transaction) {
                 if(transaction){
                     bool okay = update(username,emails,names,many);
                     if(!okay){
@@ -334,7 +334,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                 }
                 nextLoop = false;
             }
-            else if ( code == 7) {
+            else if ( code == 7 && transaction) {
                 int i;
             
                 for ( i = 0 ; i< many ; i++){
@@ -356,10 +356,10 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                 strcat(stat," octets)\r\n");
                 write(*client,stat,strlen(stat));  
             }
-            else if ( code == 8) {
+            else if ( code == 8 && transaction) {
                 write(*client, "+OK\r\n" ,strlen("+OK\r\n")); 
             }
-            else if ( code == 9) {
+            else if ( code == 9 && transaction) {
                 int size = strlen(input) - 4;
                 char param1[size];
                 int position = 5;
@@ -406,7 +406,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                 write(*client,"-ERR this user already exist\r\n" ,strlen("-ERR this user already exist\r\n" ));                             
                 }
             }
-            else if ( code == 10) {
+            else if ( code == 10 && transaction) {
                 int size = strlen(input) - 4;
                 char param1[size];
                 int position = 5;
@@ -454,7 +454,7 @@ void manage_request(int *client, struct sockaddr_in *client2) {
                             
                          }
             else {
-                write(*client,"-ERR\r\n",6);
+                write(*client,"-ERR bad command form\r\n",strlen("-ERR bad command form\r\n"));
             }
             bzero(input, sizeof input);
             }
@@ -492,7 +492,8 @@ bool checkFormat(char *input){
 
 int decodeInput(char *input){
     //toUpper(input);
-    
+    if(strlen(input) > MAX_INPUT_LENGTH)
+        return -1;
     int i = 0, function = -1;
       int sp = -1;
     for ( i = 0 ; i < strlen(input); i++){
