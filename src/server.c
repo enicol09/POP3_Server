@@ -21,6 +21,16 @@ int thread_number;  //Total threads in pool
 int alive_threads;  //Number of threads that are active
 int sock;  //Global so it can be used in sig_handler
 
+/**
+ * @brief This function handles the operation of the pool thread.
+ *
+ * We call manage_thread for each thread in the pool when each is created. Then each thread waits until
+ * a job gets in the queue and each thread races for the job. When the job(connection) finishes the 
+ * thread gets back in the "pool" and waits again.
+ *
+ * @param void *arg arguments passed to thread
+ * @return void
+ * */
 void *manage_thread(void *arg) {
     //Threads run forever
     while (true) {
