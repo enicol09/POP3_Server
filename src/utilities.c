@@ -362,10 +362,12 @@ bool list(const char *username,int mail, bool *emails,int *names,int howMany,int
         strcat(print,"-ERR no such message, only ");
         char lol[1000];
         bzero(lol,1000);
-        itoa(howMany,lol);
+        int count1 = 0, null =0;
+        activeStats(username,emails,&count1,&null);
+        itoa(count1,lol);
         strcat(print,lol);
 	strcat(print, " in mailbox\r\n");
-    	write(newsock,print,strlen(print));
+    	write(newsock,print,strlen(print)); 
         return false;
     }
     bool temp[howMany];
