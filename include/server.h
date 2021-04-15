@@ -1,3 +1,15 @@
+/** @file server.h
+ *  @brief This is a h file that helps the implementation of Hw_4.
+ *         It contains all the function declarations as they are implemented at the c files.
+ *  
+ *  You can see below all the function/libraries declarations.
+ *
+ *  @author Elia Nicolaou, Pantelis Mikelli, Michail-Panagiotis Mpofos
+ *  @version 1
+ *  @bug No know bugs.
+ *  @see server.c, utilities.c
+ */
+
 #pragma once
 #include <sys/types.h> // For sockets
 #include <sys/socket.h> // For sockets
