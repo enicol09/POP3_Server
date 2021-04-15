@@ -1,6 +1,6 @@
 /** @file queue.c
  *  @brief This is the c file that does the implementation of Hw_4.
- *         This is a file that manages the operation of queue with the jobs(connections) waiting.
+ *         This is a file that manages the operation of the queue with the jobs(connections) waiting.
  *
  *
  *  @author Elia Nicolaou, Pantelis Mikelli, Michail-Panagiotis Mpofos
