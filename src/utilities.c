@@ -1,15 +1,26 @@
+/** @file utilities.c
+ *  @brief This is the c file that helps in the implementation of Hw_4.
+ *         It contains all the function implementations as they are declared at h file library.h .
+ *         Overall, this c file contains the function implementations that they are helpful for the server functionalities.
+ *
+ *  You can see below all the function exmplanations.
+ *
+ *  @author Elia Nicolaou, Pantelis Mikelli, Michail-Panagiotis Mpofos
+ *  @version 1
+ *  @bug No know bugs.
+ *  @see server.c, library.h
+ */
 #include "library.h"
 /**
  * @brief This function checks if a user exists in our server
- * 
+ *
  * We check if a directory exists(each user has a directory with its name)
- * 
+ *
  * EXAMPLE: username: mbofos01 -> directory: mbofos01/
- * 
- * @author Michail-Panagiotis Bofos
+ *
  * @param const char *username
  * @return bool true if valid user, otherwise false
- * 
+ *
  * */
 bool userExists(const char *username){
     struct stat sb;
@@ -20,11 +31,10 @@ bool userExists(const char *username){
 }
 /**
  * @brief This function gets the size of an email
- * 
- * We need the username so we can enter the directory 
+ *
+ * We need the username so we can enter the directory
  * and then inspect the file
- * 
- * @author Michail-Panagiotis Bofos
+ *
  * @param const char *username
  * @param const char *filename
  * @return int size in bytes
@@ -40,13 +50,12 @@ int fileSize(const char *username, const char *filename){
 }
 /**
  * @brief This function counts the emails in a directory
- * 
+ *
  * Warning each user directory must have a PASSWORD file
  * which contains the password of the user
- * 
+ *
  * @bug security breach
- * 
- * @author Michail-Panagiotis Bofos
+ *
  * @param const char *username
  * @return int number of emails
  * */
@@ -79,10 +88,9 @@ int howMany(const char *username){
 }
 /**
  * @brief This function calculates the number of active emails and their size
- * 
+ *
  * We check if a mail is active and increase a counter and add its size
- * 
- * @author Michail-Panagiotis Bofos
+ *
  * @param const char *username
  * @param bool *emails active/deleted emails
  * @param int *count int pointer for the number of emails
@@ -121,11 +129,10 @@ bool activeStats(const char *username,bool *emails,int *count,int *size ){
 }
 /**
  * @brief This function finds the pointer of an email
- * 
+ *
  * Because every email names is a number we have to find its
  * place in the active/deleted bool array
- * 
- * @author Michail-Panagiotis Bofos
+ *
  * @param int main ID of a mail (eg 1-> mail number one)
  * @param int *names they array containing the mail IDs
  * @param int howMay total number of emails
@@ -141,13 +148,12 @@ int findMail(int mail,int *names,int howMany){
 }
 /**
  * @brief This function marks an email as deleted
- * 
- * We operate as a CPU, we use a dirty bit, using the 
+ *
+ * We operate as a CPU, we use a dirty bit, using the
  * array emails,if a value is false this email is not active
  * and if we end up updating our state it will be actually deleted
  * from the users directory
- * 
- * @author Michail-Panagiotis Bofos
+ *
  * @param int mail name of the email
  * @param bool *emails dirty bit arrray
  * @param int howMany totalnumber of meails
@@ -158,41 +164,48 @@ bool deleteMail(int mail,bool *emails,int howMany,int *names){
     mail = findMail(mail,names,howMany);
     if(mail < howMany && mail >=0)
         emails[mail] = false;
-        else 
+        else
         return false;
-        
+
     return true;
 }
-
+/**
+ * @brief This function writes the password of a new user when the make command is called
+ *
+ * We open a new file (fd), then we add the given password.
+ *
+ * @param username the name of the new user
+ * @param password the password of the new user
+ * @return void
+ * */
 void writePass(char *username,char *password){
     char s1[MAX_PATH];
     strcpy(s1,username);
     strcat(s1,"/PASSWORD");
-   
-    int fd = open(s1, O_WRONLY | O_CREAT , 0644); 
-      
-      
+
+    int fd = open(s1, O_WRONLY | O_CREAT , 0644);
+
+
     if (fd ==-1)
     {
         // print program detail "Success or failure"
-        perror("fd write");                 
+        perror("fd write");
     }
-    
+
     else {
          write(fd,password,strlen(password));
     }
-    
+
     close(fd);
 
 }
 /**
  * @brief This function actually deletes a file from the directory
- * 
+ *
  * We remove a file from the users directory
- * 
- * @author Michail-Panagiotis Bofos
- * @param const char *username 
- * @param char *filename 
+ *
+ * @param const char *username
+ * @param char *filename
  * @return true if everything went okay, otherwise false
  * */
 bool actuallyDeleteFile(const char *username,char *filename){
@@ -208,10 +221,9 @@ bool actuallyDeleteFile(const char *username,char *filename){
 }
 /**
  * @brief Reverse of atoi
- * 
+ *
  * This function turns an integer to string
- * 
- * @author Michail-Panagiotis Bofos
+ *
  * @param int i number we want to change
  * @param char b[] the string we create
  * @return char *
@@ -237,11 +249,10 @@ char* itoa(int i, char b[]){
 }
 /**
  * @brief UPDATE function of the server
- * 
+ *
  * Actually we just delete the marked emails
- * 
- * @author Michail-Panagiotis Bofos
- * @param const char *username 
+ *
+ * @param const char *username
  * @param bool *emails dirty bit arrray
  * @param int *names the names of the emails
  * @param int howMany totalnumber of meails
@@ -252,7 +263,7 @@ bool update(const char *username,bool *emails,int *names,int howMany){
     for(i=0;i<howMany;i++){
         char str[1000];
         itoa(names[i],str);
-        if (!emails[i]){     
+        if (!emails[i]){
 		bool flag = actuallyDeleteFile(username,str);
 		if(!flag)
 		  return false;
@@ -262,11 +273,10 @@ bool update(const char *username,bool *emails,int *names,int howMany){
 }
 /**
  * @brief This function collects the names of the emails
- * 
+ *
  * We see the user directory and collect the names
- * 
- * @author Michail-Panagiotis Bofos
- * @param const char *username 
+ *
+ * @param const char *username
  * @param int *names the names of the emails
  * @return bool if everything its okay true, otherwise false
  * */
@@ -300,11 +310,10 @@ bool fillNames(const char *username,int *names){
 }
 /**
  * @brief This function emulates the LIST signal without any parameter
- * 
+ *
  * We print the number of each email and its size
- * 
- * @author Michail-Panagiotis Bofos
- * @param const char *username 
+ *
+ * @param const char *username
  * @param int *names the names of the emails
  * @return bool if everything its okay true, otherwise false
  * */
@@ -325,23 +334,22 @@ bool listEmpty(const char *username,bool *emails,int *names,int howMany,int news
     itoa(megethos,lol2);
     strcat(print,lol2);
     strcat(print, " octets) \r\n");
-    write(newsock,print,strlen(print)); 
+    write(newsock,print,strlen(print));
     int i = 0;
     for(i=0;i<howMany;i++)
     	if(emails[i])
 	        list(username,names[i],emails,names,howMany,newsock,false);
-    write(newsock,". \r\n",4); 
+    write(newsock,". \r\n",4);
     return true;
 }
 /**
  * @brief This function emulates the LIST signal without a parameter
- * 
+ *
  * We print the number of an email and its size
- * 
+ *
  * @bug POSSIBLECHANGE: we have to change the printf to match the server logic
- * 
- * @author Michail-Panagiotis Bofos
- * @param const char *username 
+ *
+ * @param const char *username
  * @param int mail the name of the email
  * @param int *names the names of the emails
  * @return bool if everything its okay true, otherwise false
@@ -357,7 +365,7 @@ bool list(const char *username,int mail, bool *emails,int *names,int howMany,int
         itoa(howMany,lol);
         strcat(print,lol);
 	strcat(print, " in mailbox\r\n");
-    	write(newsock,print,strlen(print)); 
+    	write(newsock,print,strlen(print));
         return false;
     }
     bool temp[howMany];
@@ -382,20 +390,19 @@ bool list(const char *username,int mail, bool *emails,int *names,int howMany,int
     itoa(size,lol2);
     strcat(print,lol2);
     strcat(print, " \r\n");
-    write(newsock,print,strlen(print)); 
+    write(newsock,print,strlen(print));
     return true;
 }
 /**
  * @brief This function retrieves an email
- * 
+ *
  * We open the email file and print it
- * 
- * @bug POSSIBLECHANGE: We will need to break the email to chuncks 
+ *
+ * @bug POSSIBLECHANGE: We will need to break the email to chuncks
  * and again replace the printf to server logic
- * 
- * @author Michail-Panagiotis Bofos
+ *
  * @param int mail name of the email
- * @param const char *username 
+ * @param const char *username
  * @return bool if everything its okay true, otherwise false
  * */
 bool retrieveMail(int name,char *username, bool *emails,int *names,int howMany,int newsock) {
@@ -410,7 +417,7 @@ bool retrieveMail(int name,char *username, bool *emails,int *names,int howMany,i
     if( place == -1 || emails[place] == false)
     {
     	write(newsock,"-ERR no such message\r\n",strlen("-ERR no such message\r\n"));
-    	return false; 
+    	return false;
     }
     /****************************** GET STATS ****************************/
     bool temp[howMany];
@@ -429,8 +436,8 @@ bool retrieveMail(int name,char *username, bool *emails,int *names,int howMany,i
     itoa(message_size,lol);
     strcat(print,lol);
     strcat(print, " octets\r\n");
-    write(newsock,print,strlen(print)); 
-    
+    write(newsock,print,strlen(print));
+
     /****************************** OPEN FILE ***************************/
     itoa(name,filename);
     int name_size = strlen(username)+strlen(filename)+3;
@@ -459,7 +466,20 @@ bool retrieveMail(int name,char *username, bool *emails,int *names,int howMany,i
     close(fd);
     return true;
 }
-
+/**
+ * @brief This function sends a certain email ( given by its id) from one user to another
+ *
+ * We open a the file one the email that we want to copy to another's users inbox.
+ *
+ * @param username the name of the user that is going to send the message
+ * @param int mail name of the email
+ * @param bool *emails dirty bit arrray
+ * @param int howMany totalnumber of meails
+ * @param int *names the names of the emails
+ * @param *to the user that we want to send the email
+ * @param socket the number of the open client's socket
+ * @return void
+ * */
 bool sendEmailTo(char *username,char *mail, bool *emails,int *names,int howMany,char *to,int socket){
   int pointer = atoi(mail);
   int place = findMail(pointer,names,howMany);
@@ -467,7 +487,7 @@ bool sendEmailTo(char *username,char *mail, bool *emails,int *names,int howMany,
   if( place == -1 || emails[place] == false)
     {
     	write(socket,"-ERR no such message\r\n",strlen("-ERR no such message\r\n"));
-    	return false; 
+    	return false;
     }
     /****************************** OPEN FILE ***************************/
 
@@ -492,7 +512,7 @@ bool sendEmailTo(char *username,char *mail, bool *emails,int *names,int howMany,
     temp[place] = true;
     int message_size,null;
     activeStats(username,temp,&null,&message_size);
-    if(fd < 0 || new_file < 0){ 
+    if(fd < 0 || new_file < 0){
         write(socket,"-ERR something went wrong\r\n",strlen("-ERR something went wrong\r\n"));
         return false;
       }
@@ -510,15 +530,14 @@ bool sendEmailTo(char *username,char *mail, bool *emails,int *names,int howMany,
 }
 /**
  * @brief This function validates a user
- * 
+ *
  * Because we store the password to a file
  * we read it and compare it with the password
  * given by the user
- * 
- * @author Michail-Panagiotis Bofos
+ *
  * @param const char *username
  * @param char *passtry possible password
- * @return bool if everything its okay true, otherwise false 
+ * @return bool if everything its okay true, otherwise false
  * */
 bool passwordCheck(char *username,char *passtry){
     int size = strlen(username)+strlen("PASSWORD")+3;

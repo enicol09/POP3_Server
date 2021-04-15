@@ -1,4 +1,16 @@
-/* File: int_str_server.c */
+/** @file server.c
+ *  @brief This is the c file that does the implementation of Hw_4.
+ *         This is the main class of the program, that represents the server. The server
+ *         gets requests from different users and based on the input makes some operations and give
+ *         the result back to the client.
+ *
+ *  You can see below all the function exmplanations.
+ *
+ *  @author Elia Nicolaou, Pantelis Mikelli, Michail-Panagiotis Mpofos
+ *  @version 1
+ *  @bug No know bugs.
+ *  @see library.h,server.h
+ */
 #include "server.h"
 
 pthread_t* tpool;  //thread pool
@@ -34,444 +46,473 @@ void *manage_thread(void *arg) {
     }
 }
 
-void manage_request(int *client, struct sockaddr_in *client2) {
-    char input[256];
-    struct hostent *rem;
-    struct sockaddr_in client3 = *client2;
-    write(*client,OKAY,4);
-    write(*client,"POP3 server ready\r\n",19);
-    //reverse DNS
-    rem = gethostbyaddr((char *) &client3.sin_addr.s_addr, sizeof client3.sin_addr.s_addr, /* Find client's address */client3.sin_family);
-    if (rem == NULL)
-    {
-        perror("gethostbyaddr");
-        exit(1);
-    }
-     
-    printf("Accepted connection from %s\n", rem -> h_name);
+/**
+ * @brief This function manages the input of the client.
+ *
+ * We called decodeInput function in order to see if the input is correct. Then based on the return
+ * value of decodeInput we perform some operations based on the input command.
+ *
+ *
+ * @param int client* the socket number of the client
+ * @param struct sockaddr_in *client2
+ * @return void
+ * */
+ void manage_request(int *client, struct sockaddr_in *client2) {
+     char input[256];
+     struct hostent *rem;
+     struct sockaddr_in client3 = *client2;
+     write(*client,OKAY,4);
+     write(*client,"POP3 server ready\r\n",19);
+     //reverse DNS
+     rem = gethostbyaddr((char *) &client3.sin_addr.s_addr, sizeof client3.sin_addr.s_addr, /* Find client's address */client3.sin_family);
+     if (rem == NULL)
+     {
+         perror("gethostbyaddr");
+         exit(1);
+     }
 
-    //display(newsock);
-    bool nextLoop = true;
-    bool transaction = false;
-    bool userIn = false;
-    char *username = NULL;
-    bool *emails = NULL;
-    int mail = -1;
-    int *names = NULL;
-    int plithos,megethos,many = -1;
-    //signal(SIGALRM,sig_handler); // Register signal handler
+     printf("Accepted connection from %s\n", rem -> h_name);
 
-   
-  
-    do {
-       
-    fd_set active_fd_set;
-    FD_ZERO (&active_fd_set);
-    FD_SET (*client, &active_fd_set);
-    
-    struct timeval timeout;      
-    timeout.tv_sec = 60;
-    timeout.tv_usec = 0;
-  
-    int result = select(*client +1, &active_fd_set, NULL, NULL, &timeout);
-      
-       if(result<=0) {
-          write(*client,"-ERR connection closed due to inactivity \r\n",strlen("-ERR connection closed due to inactivity \r\n"));
-          nextLoop= false;
-      }
-      
-      else {
-      
-       bzero(input, sizeof input); /* Initialize buffer */
-       // alarm(60);  
-        if (read(*client, input, sizeof input) < 0)
-        { /* Receive message */
-            perror("read");
-            exit(1);
-        }
-               
-        //alarm(60);  // Scheduled alarm after 2 seconds
-        int code = decodeInput(input);
-            if(code == 0){
-                if(userIn)
-                    write(*client,"You have already connected \r\n",30);
-                else {
-                int size = strlen(input) - 4;
-                char user[size];
-                int position = 5;
-                int c = 0;
-                int length = size;
-                while ( c < length) {
-                    if(input[position] != '\n' && input[position] != '\r'){
-                    user[c] = input[position];
-                    c++;
-                    position++;
-                    }
-                    else {
-                    break;}
-                }
-                user[c] = '\0';
-                
+     //display(newsock);
+     bool nextLoop = true;
+     bool transaction = false;
+     bool userIn = false;
+     char *username = NULL;
+     bool *emails = NULL;
+     int mail = -1;
+     int *names = NULL;
+     int plithos,megethos,many = -1;
+     //signal(SIGALRM,sig_handler); // Register signal handler
 
-                username = malloc(sizeof(char)*c);
-                strcpy(username,user);
-                if(userExists(user) == false){
-                    char stupidError[256];
-                    bzero(stupidError,256);
-                    strcat(stupidError,"-ERR never heard of mailbox ");
-                    strcat(stupidError,user);
-                    strcat(stupidError,"\r\n\0");
-                    write(*client,stupidError,strlen(stupidError));
-                    nextLoop = false;
-                    close(*client);
-                }
-                else{
-                    char stupidMsg[256];
-                    bzero(stupidMsg,256);
-                    strcat(stupidMsg,"+OK ");
-                    strcat(stupidMsg,user);
-                    strcat(stupidMsg," is a valid mailbox\r\n\0");
-                    printf("%s\r\n",stupidMsg); 
-                    write(*client,stupidMsg,strlen(stupidMsg));
-                    //bzero(stupidMsg, sizeof stupidMsg);
-                }
-                    
-                userIn = true;
-                many = howMany(user);
-                emails = malloc(sizeof(bool)*many);
-                printf("Mails: %d\r\n",many);
-                int i =0;
-                for(i=0;i<many;i++)
-                    emails[i] = true;
-                names = malloc(sizeof(int)*many);
-                fillNames(user,names);
-                }
-            }else if(code ==1 &&  !transaction ){
-                
-                if(userIn){
-                
-                int size = strlen(input) - 4;
-                char passw[size];
-                int position = 5;
-                int c = 0;
-                int length = size;
-                while ( c < length) {
-                    if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
-                    passw[c] = input[position];
-                    c++;
-                    position++;
-                    }
-                    else {
-                    break;}
-                }
-                passw[c] = '\0';
-                
-                if(c==0){
-                    write(*client,"-ERR invalid password - you need to enter a password first \r\n",strlen("-ERR invalid password - you need to enter a password first \r\n"));
-                } else {
-                //write(newsock,"PASS\r\n",6);
-                //char *password = NULL;
-                if(userIn && !transaction) {
-                    if(passwordCheck(username,passw)){
-                        transaction = true;
-                        write(*client,"+OK maildrop locked and ready\r\n",strlen("+OK maildrop locked and ready\r\n"));
-                    }
-                        else{
-                        write(*client,"-ERR invalid password\r\n",strlen("-ERR invalid password\r\n"));
-                        nextLoop = false;
 
-                    }
-                }
-                }
-                }
-                else{
-                write(*client,"-ERR You have to insert the username first - please insert USER command :( \r\n",strlen("-ERR You have to insert the username first - please insert USER command :( \r\n")); }
-            } else if (code == 2 && transaction){
-                
-                if(transaction){
-                    activeStats(username,emails,&plithos,&megethos);
-                    char stat[256];
-                    bzero(stat,256);
-                    char lol[1000];
-                    bzero(lol,1000);
-                    strcat(stat,"+OK ");
-                    itoa(plithos,lol);
-                    strcat(stat,lol);
-                    strcat(stat," ");
-                    char lol2[1000];
-                    bzero(lol2,1000);
-                    itoa(megethos,lol2);
-                    strcat(stat,lol2);
-                    strcat(stat,"\r\n");
-                    write(*client,stat,strlen(stat)); 
-                }
-            }
-            else if (code ==3 && transaction ){
-                int size = strlen(input) - 4;
-                char listMe[size];
-                bzero(listMe,size);
-                int position = 5;
-                int c = 0;
-                int length = size;
-                while ( c < length) {
-                    if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
-                    listMe[c] = input[position];
-                    c++;
-                    position++;
-                    }
-                    else {
-                    break;}
-                }
-                listMe[c] = '\0';
-                if(transaction){
-                    if(c==0){
-                        listEmpty(username,emails,names,many,*client);
-                    }
-                    else{
-                        list(username,atoi(listMe),emails,names,many,*client,true);
-                    } 
-                    }
-                }
-            else if(code == 4 && transaction ){
-                int size = strlen(input) - 4;
-                char retrMe[size];
-                bzero(retrMe,size);
-                int position = 5;
-                int c = 0;
-                int length = size;
-                while ( c < length) {
-                    if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
-                    retrMe[c] = input[position];
-                    c++;
-                    position++;
-                    }
-                    else {
-                    break;}
-                }
-                retrMe[c] = '\0';
-                //                            write(newsock,"RETR\r\n",6);
-                if(transaction && c!=0){
-                    retrieveMail(atoi(retrMe),username,emails,names,many,*client);
-                }
-                else{
-                    write(*client,"-ERR\r\n",6);                    
-                }
-            }
-            else if (code == 5 && transaction ) {
-                int size = strlen(input) - 4;
-                char toDel[size];
-                int position = 5;
-                int c = 0;
-                int length = size;
-                while ( c < length) {
-                    if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
-                    toDel[c] = input[position];
-                    c++;
-                    position++;
-                    }
-                    else {
-                    break;}
-                }
-                toDel[c] = '\0';
-                
-                mail = atoi(toDel);
-                if(transaction){
-                    if(deleteMail(mail,emails,many,names)){
-                        char print[100];
-                        bzero(print,100);
-                        strcat(print,"+OK message ");
-                        strcat(print, toDel);
-                        strcat(print, " deleted\r\n");
-                        write(*client, print ,strlen(print)); 
-                    }
-                    else {
-                        write(*client,"-ERR no such message :(\r\n" ,strlen("-ERR no such message :(\r\n" )); 
-                    }
-                    
-                }
-            }
-            else if (code == 6 && transaction) {
-                if(transaction){
-                    bool okay = update(username,emails,names,many);
-                    if(!okay){
-                        write(*client, "-ERR some deleted messages not removed\r\n" ,strlen("-ERR some deleted messages not removed\r\n")); 
-                    }
-                    else{
-                        int left = howMany(username);
-                        //printf("hello %d\r\n",left);
-                        if(left == 0){
-                            char print[256];
-                            bzero(print,256);
-                            strcat(print,"+OK ");
-                            strcat(print, username);
-                            strcat(print, " POP3 server signing off (mailbox empty)\n\r\n");
-                            write(*client, print ,strlen(print)); 
-                        
-                        }
-                        else{
-                            char print[256];
-                            bzero(print,256);
-                            strcat(print,"+OK ");
-                            strcat(print, username);
-                            strcat(print, " POP3 server signing off (");
-                            char tmp[1000];
-                            bzero(tmp,1000);
-                            itoa(left,tmp);
-                            strcat(print,tmp);
-                            strcat(print, " messages left)\n\r\n");
-                            //printf("%s\r\n",print);
-                            write(*client, print ,strlen(print)); 
-                        }
-                    }
-                }
-                else if (userIn){
-                    char print[256];
-                    bzero(print,256);
-                    strcat(print,"+OK ");
-                    strcat(print, username);
-                    strcat(print, " POP3 server signing off \r\n");
-                    write(*client, print ,strlen(print));
-                }
-                nextLoop = false;
-            }
-            else if ( code == 7 && transaction) {
-                int i;
-            
-                for ( i = 0 ; i< many ; i++){
-                emails[i] = true;
-                }
-                activeStats(username,emails,&plithos,&megethos);
-                char stat[256];
-                bzero(stat,256);
-                char lol[1000];
-                bzero(lol,1000);
-                strcat(stat,"+OK maildrop has ");
-                itoa(plithos,lol);
-                strcat(stat,lol);
-                strcat(stat," messages (");
-                char lol2[1000];
-                bzero(lol2,1000);
-                itoa(megethos,lol2);
-                strcat(stat,lol2);
-                strcat(stat," octets)\r\n");
-                write(*client,stat,strlen(stat));  
-            }
-            else if ( code == 8 && transaction) {
-                write(*client, "+OK\r\n" ,strlen("+OK\r\n")); 
-            }
-            else if ( code == 9 && transaction) {
-                int size = strlen(input) - 4;
-                char param1[size];
-                int position = 5;
-                int c = 0;
-                int length = size;
-                while ( c < length) {
-                    if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
-                    param1[c] = input[position];
-                    c++;
-                    position++;
-                    }
-                    else {
-                    break;}
-                }
-                
-                position++;
-                param1[c] = '\0';
-                c = 0;
-                char param2[size];
-                    while ( c < length) {
-                    if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
-                    param2[c] = input[position];
-                    c++;
-                    position++;
-                    }
-                    else {
-                    break;}
-                }
-                param2[c] = '\0';   
-                if(c==0){
-                write(*client,"-ERR enter a password\r\n" ,strlen("-ERR enter a password\\r\n" ));   
-                }
-                else if(!userExists(param1)){ 
-                mkdir(param1,0777);
-                    writePass(param1,param2);
-                        char stat[256];
-                    bzero(stat,256);
-                    strcat(stat,"+OK Welcome ");
-                    strcat(stat,param1);
-                    strcat(stat,"!\r\n");
-                    write(*client,stat,strlen(stat)); 
-                }
-                else{
-                write(*client,"-ERR this user already exist\r\n" ,strlen("-ERR this user already exist\r\n" ));                             
-                }
-            }
-            else if ( code == 10 && transaction) {
-                int size = strlen(input) - 4;
-                char param1[size];
-                int position = 5;
-                int c = 0;
-                int length = size;
-                while ( c < length) {
-                    if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
-                    param1[c] = input[position];
-                    c++;
-                    position++;
-                    }
-                    else {
-                    break;}
-                }
-                
-                position++;
-                param1[c] = '\0';
-                c = 0;
-                char param2[size];
-                while ( c < length) {
-                    if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
-                    param2[c] = input[position];
-                    c++;
-                    position++;
-                    }
-                    else {
-                    break;}
-                }
-                param2[c] = '\0';  
-                if(c==0){
-                    write(*client,"-ERR enter a receiver\r\n" ,strlen("-ERR enter a receiver\r\n" ));    
-                }
-                else if(!userExists(param2) ){
-                    write(*client,"-ERR This user does not exist\r\n",strlen("-ERR This user does not exist\r\n"));
-                }
-                else{
-                if(sendEmailTo(username,param1,emails,names,many,param2,*client))
-                        write(*client,"+OK email send\r\n",strlen("+OK email send\r\n"));
-                } 
-            }
-               else if(code == 11) {
-                         
-                         char *help = "THE OPTIONS THAT YOU HAVE ARE: \n 1.USER \n 2.PASS (argument your password)\n 3.STAT \n 4.LIST (maybe with argument)\n 5.RETR (argument)\n 6.DELE (argument) \n 7.QUIT \n 8.NOOP\n 9.RSET\n 10.MAKE (argument user , argument password)\n 11.SEND (argument num of email, user to send the msg) \n 12.HELP\n.\r\n";
-                          write(*client,help,strlen(help));
-                            
+
+     do {
+
+     fd_set active_fd_set;
+     FD_ZERO (&active_fd_set);
+     FD_SET (*client, &active_fd_set);
+
+     struct timeval timeout;
+     timeout.tv_sec = 60;
+     timeout.tv_usec = 0;
+
+     int result = select(*client +1, &active_fd_set, NULL, NULL, &timeout);
+
+        if(result<=0) {
+           write(*client,"-ERR connection closed due to inactivity \r\n",strlen("-ERR connection closed due to inactivity \r\n"));
+           nextLoop= false;
+       }
+
+       else {
+
+        bzero(input, sizeof input); /* Initialize buffer */
+        // alarm(60);
+         if (read(*client, input, sizeof input) < 0)
+         { /* Receive message */
+             perror("read");
+             exit(1);
+         }
+
+         //alarm(60);  // Scheduled alarm after 2 seconds
+         int code = decodeInput(input);
+             if(code == 0){
+                 if(userIn)
+                     write(*client,"You have already connected \r\n",30);
+                 else {
+                 int size = strlen(input) - 4;
+                 char user[size];
+                 int position = 5;
+                 int c = 0;
+                 int length = size;
+                 while ( c < length) {
+                     if(input[position] != '\n' && input[position] != '\r'){
+                     user[c] = input[position];
+                     c++;
+                     position++;
+                     }
+                     else {
+                     break;}
+                 }
+                 user[c] = '\0';
+
+
+                 username = malloc(sizeof(char)*c);
+                 strcpy(username,user);
+                 if(userExists(user) == false){
+                     char stupidError[256];
+                     bzero(stupidError,256);
+                     strcat(stupidError,"-ERR never heard of mailbox ");
+                     strcat(stupidError,user);
+                     strcat(stupidError,"\r\n\0");
+                     write(*client,stupidError,strlen(stupidError));
+                     nextLoop = false;
+                     close(*client);
+                 }
+                 else{
+                     char stupidMsg[256];
+                     bzero(stupidMsg,256);
+                     strcat(stupidMsg,"+OK ");
+                     strcat(stupidMsg,user);
+                     strcat(stupidMsg," is a valid mailbox\r\n\0");
+                     printf("%s\r\n",stupidMsg);
+                     write(*client,stupidMsg,strlen(stupidMsg));
+                     //bzero(stupidMsg, sizeof stupidMsg);
+                 }
+
+                 userIn = true;
+                 many = howMany(user);
+                 emails = malloc(sizeof(bool)*many);
+                 printf("Mails: %d\r\n",many);
+                 int i =0;
+                 for(i=0;i<many;i++)
+                     emails[i] = true;
+                 names = malloc(sizeof(int)*many);
+                 fillNames(user,names);
+                 }
+             }else if(code ==1 &&  !transaction ){
+
+                 if(userIn){
+
+                 int size = strlen(input) - 4;
+                 char passw[size];
+                 int position = 5;
+                 int c = 0;
+                 int length = size;
+                 while ( c < length) {
+                     if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                     passw[c] = input[position];
+                     c++;
+                     position++;
+                     }
+                     else {
+                     break;}
+                 }
+                 passw[c] = '\0';
+
+                 if(c==0){
+                     write(*client,"-ERR invalid password - you need to enter a password first \r\n",strlen("-ERR invalid password - you need to enter a password first \r\n"));
+                 } else {
+                 //write(newsock,"PASS\r\n",6);
+                 //char *password = NULL;
+                 if(userIn && !transaction) {
+                     if(passwordCheck(username,passw)){
+                         transaction = true;
+                         write(*client,"+OK maildrop locked and ready\r\n",strlen("+OK maildrop locked and ready\r\n"));
+                     }
+                         else{
+                         write(*client,"-ERR invalid password\r\n",strlen("-ERR invalid password\r\n"));
+                         nextLoop = false;
+
+                     }
+                 }
+                 }
+                 }
+                 else{
+                 write(*client,"-ERR You have to insert the username first - please insert USER command :( \r\n",strlen("-ERR You have to insert the username first - please insert USER command :( \r\n")); }
+             } else if (code == 2 && transaction){
+
+                 if(transaction){
+                     activeStats(username,emails,&plithos,&megethos);
+                     char stat[256];
+                     bzero(stat,256);
+                     char lol[1000];
+                     bzero(lol,1000);
+                     strcat(stat,"+OK ");
+                     itoa(plithos,lol);
+                     strcat(stat,lol);
+                     strcat(stat," ");
+                     char lol2[1000];
+                     bzero(lol2,1000);
+                     itoa(megethos,lol2);
+                     strcat(stat,lol2);
+                     strcat(stat,"\r\n");
+                     write(*client,stat,strlen(stat));
+                 }
+             }
+             else if (code ==3 && transaction ){
+                 int size = strlen(input) - 4;
+                 char listMe[size];
+                 bzero(listMe,size);
+                 int position = 5;
+                 int c = 0;
+                 int length = size;
+                 while ( c < length) {
+                     if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                     listMe[c] = input[position];
+                     c++;
+                     position++;
+                     }
+                     else {
+                     break;}
+                 }
+                 listMe[c] = '\0';
+                 if(transaction){
+                     if(c==0){
+                         listEmpty(username,emails,names,many,*client);
+                     }
+                     else{
+                         list(username,atoi(listMe),emails,names,many,*client,true);
+                     }
+                     }
+                 }
+             else if(code == 4 && transaction ){
+                 int size = strlen(input) - 4;
+                 char retrMe[size];
+                 bzero(retrMe,size);
+                 int position = 5;
+                 int c = 0;
+                 int length = size;
+                 while ( c < length) {
+                     if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                     retrMe[c] = input[position];
+                     c++;
+                     position++;
+                     }
+                     else {
+                     break;}
+                 }
+                 retrMe[c] = '\0';
+                 //                            write(newsock,"RETR\r\n",6);
+                 if(transaction && c!=0){
+                     retrieveMail(atoi(retrMe),username,emails,names,many,*client);
+                 }
+                 else{
+                     write(*client,"-ERR\r\n",6);
+                 }
+             }
+             else if (code == 5 && transaction ) {
+                 int size = strlen(input) - 4;
+                 char toDel[size];
+                 int position = 5;
+                 int c = 0;
+                 int length = size;
+                 while ( c < length) {
+                     if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                     toDel[c] = input[position];
+                     c++;
+                     position++;
+                     }
+                     else {
+                     break;}
+                 }
+                 toDel[c] = '\0';
+
+                 mail = atoi(toDel);
+                 if(transaction){
+                     if(deleteMail(mail,emails,many,names)){
+                         char print[100];
+                         bzero(print,100);
+                         strcat(print,"+OK message ");
+                         strcat(print, toDel);
+                         strcat(print, " deleted\r\n");
+                         write(*client, print ,strlen(print));
+                     }
+                     else {
+                         write(*client,"-ERR no such message :(\r\n" ,strlen("-ERR no such message :(\r\n" ));
+                     }
+
+                 }
+             }
+             else if (code == 6 && transaction) {
+                 if(transaction){
+                     bool okay = update(username,emails,names,many);
+                     if(!okay){
+                         write(*client, "-ERR some deleted messages not removed\r\n" ,strlen("-ERR some deleted messages not removed\r\n"));
+                     }
+                     else{
+                         int left = howMany(username);
+                         //printf("hello %d\r\n",left);
+                         if(left == 0){
+                             char print[256];
+                             bzero(print,256);
+                             strcat(print,"+OK ");
+                             strcat(print, username);
+                             strcat(print, " POP3 server signing off (mailbox empty)\n\r\n");
+                             write(*client, print ,strlen(print));
+
                          }
-            else {
-                write(*client,"-ERR bad command form\r\n",strlen("-ERR bad command form\r\n"));
-            }
-            bzero(input, sizeof input);
-            }
-        } while (nextLoop); /* Finish on "end" */
-        
-        free(emails);
-        free(names);
-        close(*client); /* Close socket */
-        printf("Connection from %s is closed\n", rem -> h_name);
-}
+                         else{
+                             char print[256];
+                             bzero(print,256);
+                             strcat(print,"+OK ");
+                             strcat(print, username);
+                             strcat(print, " POP3 server signing off (");
+                             char tmp[1000];
+                             bzero(tmp,1000);
+                             itoa(left,tmp);
+                             strcat(print,tmp);
+                             strcat(print, " messages left)\n\r\n");
+                             //printf("%s\r\n",print);
+                             write(*client, print ,strlen(print));
+                         }
+                     }
+                 }
+                 else if (userIn){
+                     char print[256];
+                     bzero(print,256);
+                     strcat(print,"+OK ");
+                     strcat(print, username);
+                     strcat(print, " POP3 server signing off \r\n");
+                     write(*client, print ,strlen(print));
+                 }
+                 nextLoop = false;
+             }
+             else if ( code == 7 && transaction) {
+                 int i;
 
+                 for ( i = 0 ; i< many ; i++){
+                 emails[i] = true;
+                 }
+                 activeStats(username,emails,&plithos,&megethos);
+                 char stat[256];
+                 bzero(stat,256);
+                 char lol[1000];
+                 bzero(lol,1000);
+                 strcat(stat,"+OK maildrop has ");
+                 itoa(plithos,lol);
+                 strcat(stat,lol);
+                 strcat(stat," messages (");
+                 char lol2[1000];
+                 bzero(lol2,1000);
+                 itoa(megethos,lol2);
+                 strcat(stat,lol2);
+                 strcat(stat," octets)\r\n");
+                 write(*client,stat,strlen(stat));
+             }
+             else if ( code == 8 && transaction) {
+                 write(*client, "+OK\r\n" ,strlen("+OK\r\n"));
+             }
+             else if ( code == 9 && transaction) {
+                 int size = strlen(input) - 4;
+                 char param1[size];
+                 int position = 5;
+                 int c = 0;
+                 int length = size;
+                 while ( c < length) {
+                     if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                     param1[c] = input[position];
+                     c++;
+                     position++;
+                     }
+                     else {
+                     break;}
+                 }
+
+                 position++;
+                 param1[c] = '\0';
+                 c = 0;
+                 char param2[size];
+                     while ( c < length) {
+                     if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                     param2[c] = input[position];
+                     c++;
+                     position++;
+                     }
+                     else {
+                     break;}
+                 }
+                 param2[c] = '\0';
+                 if(c==0){
+                 write(*client,"-ERR enter a password\r\n" ,strlen("-ERR enter a password\\r\n" ));
+                 }
+                 else if(!userExists(param1)){
+                 mkdir(param1,0777);
+                     writePass(param1,param2);
+                         char stat[256];
+                     bzero(stat,256);
+                     strcat(stat,"+OK Welcome ");
+                     strcat(stat,param1);
+                     strcat(stat,"!\r\n");
+                     write(*client,stat,strlen(stat));
+                 }
+                 else{
+                 write(*client,"-ERR this user already exist\r\n" ,strlen("-ERR this user already exist\r\n" ));
+                 }
+             }
+             else if ( code == 10 && transaction) {
+                 int size = strlen(input) - 4;
+                 char param1[size];
+                 int position = 5;
+                 int c = 0;
+                 int length = size;
+                 while ( c < length) {
+                     if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                     param1[c] = input[position];
+                     c++;
+                     position++;
+                     }
+                     else {
+                     break;}
+                 }
+
+                 position++;
+                 param1[c] = '\0';
+                 c = 0;
+                 char param2[size];
+                 while ( c < length) {
+                     if(input[position] != '\n' && input[position] != '\r' && input[position]!=' '){
+                     param2[c] = input[position];
+                     c++;
+                     position++;
+                     }
+                     else {
+                     break;}
+                 }
+                 param2[c] = '\0';
+                 if(c==0){
+                     write(*client,"-ERR enter a receiver\r\n" ,strlen("-ERR enter a receiver\r\n" ));
+                 }
+                 else if(!userExists(param2) ){
+                     write(*client,"-ERR This user does not exist\r\n",strlen("-ERR This user does not exist\r\n"));
+                 }
+                 else{
+                 if(sendEmailTo(username,param1,emails,names,many,param2,*client))
+                         write(*client,"+OK email send\r\n",strlen("+OK email send\r\n"));
+                 }
+             }
+                else if(code == 11) {
+
+                          char *help = "THE OPTIONS THAT YOU HAVE ARE: \n 1.USER \n 2.PASS (argument your password)\n 3.STAT \n 4.LIST (maybe with argument)\n 5.RETR (argument)\n 6.DELE (argument) \n 7.QUIT \n 8.NOOP\n 9.RSET\n 10.MAKE (argument user , argument password)\n 11.SEND (argument num of email, user to send the msg) \n 12.HELP\n.\r\n";
+                           write(*client,help,strlen(help));
+
+                          }
+             else {
+                 write(*client,"-ERR bad command form\r\n",strlen("-ERR bad command form\r\n"));
+             }
+             bzero(input, sizeof input);
+             }
+         } while (nextLoop); /* Finish on "end" */
+
+         free(emails);
+         free(names);
+         close(*client); /* Close socket */
+         printf("Connection from %s is closed\n", rem -> h_name);
+ }
+
+
+ /**
+  * @brief This function manages the signal.
+  *
+  * If we catch a signal the server is closing.
+  *
+  * @param int signmu the number of signal - type
+  * @param int sock the socket number
+  * @return void
+  *
+  * */
 void sig_handler(int signum,int sock){
   printf("Server Closing\r\n");
   close(sock);
   exit(1);
 }
 
+/**
+ * @brief This function returns a given char *value in UPPERCASE from.
+ *
+ * @param char *input the string
+ * @return void
+ *
+ * */
 void toUpper(char *input){
    int i;
    for (i = 0; input[i]!='\0'; i++) {
@@ -481,49 +522,72 @@ void toUpper(char *input){
    }
 }
 
+/**
+ * @brief This function returns the length of the valid commands
+ *
+ * @return int the lengeth
+ *
+ * */
 int getLength(){
     return sizeof(command)/sizeof(char*);
 }
 
+/**
+ * @brief This function checks if the input is in the right format.
+ *
+ * @return char *input the given input
+ * @return bool true if it is in the correct format / false if it is not.
+ * */
 bool checkFormat(char *input){
     int last = strlen(input) -1;
     return input[last] == '\n' && input[last-1]=='\r';
 }
+/**
+ * @brief This function gets as a parameter the input and returns a number.
+ *
+ * We check if the number has the valid form, and returns the id of the input.
+ * If it is not in the right format then returns -1;
+ *
+ * @param char *input the given input
+ * @return int returns the id of the input when it is in the valid format or -1 if it is not.
+ * */
+ int decodeInput(char *input){
+     //toUpper(input);
+     if(strlen(input) > MAX_INPUT_LENGTH)
+         return -1;
+     int i = 0, function = -1;
+       int sp = -1;
+     for ( i = 0 ; i < strlen(input); i++){
+        if(input[i]==' ') {
+          sp = i;
+          break; }
+      }
 
-int decodeInput(char *input){
-    //toUpper(input);
-    if(strlen(input) > MAX_INPUT_LENGTH)
-        return -1;
-    int i = 0, function = -1;
-      int sp = -1;
-    for ( i = 0 ; i < strlen(input); i++){
-       if(input[i]==' ') {
-         sp = i; 
-         break; }
+      if(sp == -1){
+        if(input[4]!='\r'){
+          return function;
+          }
+      }
+        else if ( sp !=4 ) {
+        return function;
+        }
+     char code[5];
+     for(i=0;i<4;i++){
+         code[i] = input[i];
      }
-     
-     if(sp == -1){
-       if(input[4]!='\r'){
-         return function;
+     code[4] = '\0';
+     toUpper(code);
+     for(i=0;i<getLength();i++){
+         if(strcmp(command[i],code)==0){
+             function = i;
          }
      }
-       else if ( sp !=4 ) {
-       return function;
-       }
-    char code[5];
-    for(i=0;i<4;i++){
-        code[i] = input[i];
-    }
-    code[4] = '\0';
-    toUpper(code);
-    for(i=0;i<getLength();i++){
-        if(strcmp(command[i],code)==0){
-            function = i;
-        }
-    }
-    return function;
-}
-
+     return function;
+ }
+/**
+ * @brief This is the main function.
+ *
+ * */
 int main(int argc, char *argv[]) /* Server with Internet stream sockets */
 {
     int port,newsock, serverlen;//, clientlen;
@@ -595,10 +659,10 @@ int main(int argc, char *argv[]) /* Server with Internet stream sockets */
         enqueue(new_req_socket, &client);
         alive_threads++;
         pthread_cond_signal(&cond_var);
-        pthread_mutex_unlock(&mutex);   
-            
+        pthread_mutex_unlock(&mutex);
+
             //exit(0);
     }while(true);
     close(sock);
-    return 0;   
+    return 0;
 }

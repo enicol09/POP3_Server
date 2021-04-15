@@ -1,3 +1,12 @@
+/** @file utilities.c
+ *  @brief This is the c file that is just testing for the implementation of Hw_4.
+ *
+ *
+ *  @author Elia Nicolaou, Pantelis Mikelli, Michail-Panagiotis Mpofos
+ *  @version 1
+ *  @bug No know bugs.
+ *  @see server.c, library.h
+ */
 #include "library.h"
 #ifdef UTIL_TEST
 int main(int argc, char* argv[])
@@ -69,7 +78,7 @@ int main(int argc, char* argv[])
             printf("----print mail number %d\n",atoi(inputs[counter]));
             retrieveMail(atoi(inputs[counter]),folder);
         }
-       
+
         counter++;
 
     }while(nextLoop);
