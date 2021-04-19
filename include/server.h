@@ -19,6 +19,7 @@
 #include "library.h"
 #include "queue.h"
 
+#define MAX_INPUT_LENGTH 40
 #define RESPONSE_LENGTH 512
 #define OKAY "+OK "
 #define ERROR "-ERR "
